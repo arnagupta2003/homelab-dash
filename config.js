@@ -1,16 +1,16 @@
 /**
- * Homelab Dashboard Configuration
+ * ARCUBE Homelab Dashboard Configuration
  * ---------------------------------------------------------------------------
- * Edit this file to match your 5 servers and self-hosted services.
- * Every service has both a "familyName" / "familyDescription" (plain English)
- * and a "techName" / "techStack" (shown when Tech Mode is toggled on).
+ * Edit this file to match your 5 servers, family apps, and debug/admin tools.
+ * - "services": Section 1 — Click-to-redirect everyday apps for family members.
+ * - "debugServices": Section 2 — Admin, monitoring & debug consoles.
  */
 
 window.HOMELAB_CONFIG = {
   // Branding shown in the top-left sidebar & mobile header
   brand: {
-    initials: "AG",
-    title: "Gupta Homelab",
+    initials: "AC",
+    title: "ARCUBE",
     subtitle: "Home Cloud · 5 Servers",
     ownerName: "Arnav",
     supportNote: "If something isn't loading, wait 1 minute and refresh. Still stuck? Message Arnav.",
@@ -21,7 +21,7 @@ window.HOMELAB_CONFIG = {
   // Global status banner at the top of the page
   banner: {
     location: "Home Network · Bangalore",
-    allGoodText: "All 5 home servers are online and working normally",
+    allGoodText: "All 5 ARCUBE servers are online and working normally",
     degradedText: "Some services are currently restarting or offline",
   },
 
@@ -89,23 +89,11 @@ window.HOMELAB_CONFIG = {
     },
   ],
 
-  // Homelab Projects & Family Services
+  // =========================================================================
+  // SECTION 1: Family & Everyday Apps (Click-to-Redirect)
   // Categories: "Media", "Photos & Files", "Smart Home", "AI & Notes", "Utilities"
+  // =========================================================================
   services: [
-    {
-      id: "jellyfin",
-      familyName: "Movies & TV Shows",
-      techName: "Jellyfin",
-      category: "Media",
-      familyDescription: "Watch our family movie & TV collection on any phone, laptop, or living room TV.",
-      techStack: "Jellyfin · Hardware Transcoding · Port 8096",
-      url: "https://watch.home.arpa",
-      serverId: "srv-1",
-      status: "online",
-      featured: true,
-      icon: "film",
-      quickTip: "Open the Jellyfin app on the TV or click Open App here.",
-    },
     {
       id: "immich",
       familyName: "Family Photos & Videos",
@@ -116,9 +104,21 @@ window.HOMELAB_CONFIG = {
       url: "https://photos.home.arpa",
       serverId: "srv-2",
       status: "online",
-      featured: true,
       icon: "image",
       quickTip: "Install the Immich app on your phone to auto-backup photos over Wi-Fi.",
+    },
+    {
+      id: "jellyfin",
+      familyName: "Movies & TV Shows",
+      techName: "Jellyfin",
+      category: "Media",
+      familyDescription: "Watch our family movie & TV collection on any phone, laptop, or living room TV.",
+      techStack: "Jellyfin · Hardware Transcoding · Port 8096",
+      url: "https://watch.home.arpa",
+      serverId: "srv-1",
+      status: "online",
+      icon: "film",
+      quickTip: "Open the Jellyfin app on the TV or click here to watch in your browser.",
     },
     {
       id: "nextcloud",
@@ -130,7 +130,6 @@ window.HOMELAB_CONFIG = {
       url: "https://drive.home.arpa",
       serverId: "srv-2",
       status: "online",
-      featured: true,
       icon: "folder-heart",
       quickTip: "Use your family login to view or upload important PDFs.",
     },
@@ -144,23 +143,8 @@ window.HOMELAB_CONFIG = {
       url: "https://home.home.arpa",
       serverId: "srv-4",
       status: "online",
-      featured: true,
       icon: "home",
       quickTip: "Works best when connected to home Wi-Fi.",
-    },
-    {
-      id: "vaultwarden",
-      familyName: "Family Password Vault",
-      techName: "Vaultwarden",
-      category: "Utilities",
-      familyDescription: "Safely store and share Wi-Fi passwords, streaming logins, and bank details.",
-      techStack: "Vaultwarden · Bitwarden Compatible",
-      url: "https://vault.home.arpa",
-      serverId: "srv-5",
-      status: "online",
-      featured: false,
-      icon: "key-round",
-      quickTip: "Use the Bitwarden browser extension or phone app.",
     },
     {
       id: "open-webui",
@@ -172,23 +156,21 @@ window.HOMELAB_CONFIG = {
       url: "https://ai.home.arpa",
       serverId: "srv-3",
       status: "online",
-      featured: true,
       icon: "sparkles",
       quickTip: "Runs on our home GPU—nothing you type leaves the house.",
     },
     {
-      id: "adguard",
-      familyName: "Whole-Home Ad Blocker",
-      techName: "AdGuard Home",
+      id: "vaultwarden",
+      familyName: "Family Password Vault",
+      techName: "Vaultwarden",
       category: "Utilities",
-      familyDescription: "Automatically blocks annoying ads and scam websites on all home Wi-Fi devices.",
-      techStack: "AdGuard Home · DNS-over-HTTPS",
-      url: "https://dns.home.arpa",
-      serverId: "srv-4",
+      familyDescription: "Safely store and share Wi-Fi passwords, streaming logins, and bank details.",
+      techStack: "Vaultwarden · Bitwarden Compatible",
+      url: "https://vault.home.arpa",
+      serverId: "srv-5",
       status: "online",
-      featured: false,
-      icon: "shield-check",
-      quickTip: "No app needed—it works automatically on home Wi-Fi.",
+      icon: "key-round",
+      quickTip: "Use the Bitwarden browser extension or phone app.",
     },
     {
       id: "llm-wiki",
@@ -200,23 +182,8 @@ window.HOMELAB_CONFIG = {
       url: "https://wiki.home.arpa",
       serverId: "srv-3",
       status: "online",
-      featured: false,
       icon: "book-open",
       quickTip: "Great for finding Wi-Fi info or appliance manuals.",
-    },
-    {
-      id: "n8n",
-      familyName: "Home Automations",
-      techName: "n8n + Dagu Runner",
-      category: "AI & Notes",
-      familyDescription: "Background helpers that send bill reminders and keep backups healthy.",
-      techStack: "n8n · Docker · Dagu · Webhooks",
-      url: "https://flow.home.arpa",
-      serverId: "srv-3",
-      status: "online",
-      featured: false,
-      icon: "workflow",
-      quickTip: "Runs automatically in the background.",
     },
     {
       id: "cal",
@@ -228,9 +195,99 @@ window.HOMELAB_CONFIG = {
       url: "https://cal.qubit.bizad.in",
       serverId: "srv-5",
       status: "online",
-      featured: false,
       icon: "calendar",
       quickTip: "Works from anywhere without home Wi-Fi.",
+    },
+  ],
+
+  // =========================================================================
+  // SECTION 2: Debug & Admin Services (Portainer, Tailscale, Hypervisors, DNS)
+  // Categories: "Containers", "Network & VPN", "Virtualization", "DNS & Proxy", "Automation"
+  // =========================================================================
+  debugServices: [
+    {
+      id: "portainer",
+      familyName: "Container Manager (Portainer)",
+      techName: "Portainer CE",
+      category: "Containers",
+      familyDescription: "Admin tool for restarting app containers and checking Docker logs.",
+      techStack: "Portainer · Docker Socket · Port 9443",
+      url: "https://portainer.home.arpa",
+      serverId: "srv-1",
+      status: "online",
+      icon: "boxes",
+    },
+    {
+      id: "tailscale",
+      familyName: "Remote Access Console (Tailscale)",
+      techName: "Tailscale Admin Console",
+      category: "Network & VPN",
+      familyDescription: "Manage which phones and laptops can reach ARCUBE from outside the house.",
+      techStack: "Tailscale Mesh VPN · Subnet Router",
+      url: "https://login.tailscale.com/admin/machines",
+      serverId: "srv-5",
+      status: "online",
+      icon: "network",
+    },
+    {
+      id: "proxmox",
+      familyName: "Main Server Hypervisor (Proxmox)",
+      techName: "Proxmox VE",
+      category: "Virtualization",
+      familyDescription: "Low-level virtual machine & power controls for the main server.",
+      techStack: "Proxmox VE 8 · KVM / LXC · Port 8006",
+      url: "https://pve.home.arpa:8006",
+      serverId: "srv-1",
+      status: "online",
+      icon: "cpu",
+    },
+    {
+      id: "truenas",
+      familyName: "Storage Health (TrueNAS)",
+      techName: "TrueNAS SCALE UI",
+      category: "Virtualization",
+      familyDescription: "Check hard drive health, ZFS pool space, and automatic backup tasks.",
+      techStack: "TrueNAS SCALE · ZFS RAIDZ2 · SMART",
+      url: "https://nas.home.arpa",
+      serverId: "srv-2",
+      status: "online",
+      icon: "hard-drive",
+    },
+    {
+      id: "adguard",
+      familyName: "Wi-Fi Ad Blocker & DNS (AdGuard)",
+      techName: "AdGuard Home",
+      category: "DNS & Proxy",
+      familyDescription: "View blocked ad queries and local DNS rewrites (*.home.arpa).",
+      techStack: "AdGuard Home · DNS-over-HTTPS · Port 3000",
+      url: "https://dns.home.arpa",
+      serverId: "srv-4",
+      status: "online",
+      icon: "shield-check",
+    },
+    {
+      id: "n8n",
+      familyName: "Automation & Workflows (n8n)",
+      techName: "n8n + Dagu Runner",
+      category: "Automation",
+      familyDescription: "Background workflows, webhooks, and scheduled server health checks.",
+      techStack: "n8n · Docker · Dagu · Webhooks",
+      url: "https://flow.home.arpa",
+      serverId: "srv-3",
+      status: "online",
+      icon: "workflow",
+    },
+    {
+      id: "uptime-kuma",
+      familyName: "Service Uptime Monitor",
+      techName: "Uptime Kuma",
+      category: "DNS & Proxy",
+      familyDescription: "Live ping history and downtime alerts for all 5 servers and apps.",
+      techStack: "Uptime Kuma · HTTP/TCP Probes · Port 3001",
+      url: "https://status.home.arpa",
+      serverId: "srv-4",
+      status: "online",
+      icon: "activity",
     },
   ],
 
@@ -240,7 +297,7 @@ window.HOMELAB_CONFIG = {
       title: "How to watch movies on the TV or phone",
       steps: [
         "Make sure your phone, tablet, or TV is connected to our Home Wi-Fi.",
-        "Click 'Open App' on Movies & TV Shows (or open the Jellyfin app on the TV).",
+        "Click 'Movies & TV Shows' on the Overview page (or open the Jellyfin app on the TV).",
         "Pick your profile name and press Play.",
       ],
     },
