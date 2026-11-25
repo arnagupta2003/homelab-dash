@@ -175,14 +175,9 @@
 
   // --- Shared Card Renderers ---
   function renderRedirectCard(svc, isDebug = false) {
-    const srv = getServerById(svc.serverId);
     const st = statusMeta(svc.status);
-    const title = state.techMode ? svc.techName : svc.familyName;
-    const subtitle = state.techMode
-      ? svc.techStack
-      : srv
-      ? `${srv.familyName} · ${svc.category}`
-      : svc.category;
+    const label = svc.name || svc.familyName || svc.techName || svc.url;
+    const showUrlSub = label !== svc.url;
 
     const borderAccent = isDebug
       ? "border-zinc-800/80 bg-zinc-950/70 hover:border-amber-500/40 hover:bg-zinc-900/70"
@@ -193,49 +188,25 @@
         href="${escapeHtml(svc.url)}"
         target="_blank"
         rel="noopener noreferrer"
-        class="group flex flex-col justify-between rounded-xl border p-4 transition-all ${borderAccent}"
+        class="group flex items-center justify-between gap-3 rounded-xl border p-3.5 transition-all ${borderAccent}"
       >
-        <div>
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-center gap-2.5">
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-200 group-hover:border-zinc-700">
-                <i data-lucide="${escapeHtml(svc.icon || "box")}" class="h-4 w-4"></i>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold text-zinc-100 group-hover:text-white">${escapeHtml(title)}</h3>
-                <p class="text-[11px] text-zinc-500">${escapeHtml(subtitle)}</p>
-              </div>
-            </div>
-            <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${st.pill}">
-              <span class="h-1.5 w-1.5 rounded-full ${st.dot}"></span>
-              ${escapeHtml(state.techMode ? st.techLabel : st.familyLabel)}
-            </span>
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-200 group-hover:border-zinc-700">
+            <i data-lucide="${escapeHtml(svc.icon || "globe")}" class="h-4 w-4"></i>
           </div>
-
-          <p class="mt-3 text-xs leading-relaxed text-zinc-300">
-            ${escapeHtml(svc.familyDescription)}
-          </p>
-
-          ${
-            !state.techMode && svc.quickTip
-              ? `<p class="mt-2.5 rounded-md border border-zinc-800/70 bg-zinc-900/50 px-2.5 py-1.5 text-[11px] text-zinc-400"><span class="font-medium text-zinc-300">Tip:</span> ${escapeHtml(svc.quickTip)}</p>`
-              : ""
-          }
-
-          ${
-            state.techMode && srv
-              ? `<p class="mt-2.5 truncate font-mono-code text-[11px] text-zinc-500">${escapeHtml(srv.techName)} · ${escapeHtml(srv.ip)} · ${escapeHtml(svc.url)}</p>`
-              : ""
-          }
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h3 class="truncate text-sm font-semibold text-zinc-100 group-hover:text-white">${escapeHtml(label)}</h3>
+              <span class="h-1.5 w-1.5 shrink-0 rounded-full ${st.dot}"></span>
+            </div>
+            ${
+              showUrlSub
+                ? `<p class="truncate font-mono-code text-[11px] text-zinc-500">${escapeHtml(svc.url)}</p>`
+                : `<p class="truncate text-[11px] text-zinc-500">${isDebug ? "Debug / Admin" : "Click to open"}</p>`
+            }
+          </div>
         </div>
-
-        <div class="mt-4 flex items-center justify-between gap-2 border-t border-zinc-800/60 pt-3">
-          <span class="text-[11px] text-zinc-500">${isDebug ? "Admin / Debug" : escapeHtml(svc.category)}</span>
-          <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-950 transition-colors group-hover:bg-white">
-            <span>${isDebug ? "Open Console" : "Open App"}</span>
-            <i data-lucide="arrow-up-right" class="h-3.5 w-3.5"></i>
-          </span>
-        </div>
+        <i data-lucide="arrow-up-right" class="h-4 w-4 shrink-0 text-zinc-500 transition-colors group-hover:text-zinc-200"></i>
       </a>
     `;
   }
@@ -345,7 +316,7 @@
 
     const filtered = cfg.services.filter((svc) => {
       const catOk = state.selectedCategory === "All" || svc.category === state.selectedCategory;
-      const text = `${svc.familyName} ${svc.techName} ${svc.familyDescription} ${svc.techStack} ${svc.category}`.toLowerCase();
+      const text = `${svc.name || ""} ${svc.url || ""} ${svc.category || ""}`.toLowerCase();
       const qOk = !q || text.includes(q);
       return catOk && qOk;
     });
@@ -409,7 +380,7 @@
 
     const filtered = debugList.filter((svc) => {
       const catOk = state.selectedDebugCategory === "All" || svc.category === state.selectedDebugCategory;
-      const text = `${svc.familyName} ${svc.techName} ${svc.familyDescription} ${svc.techStack} ${svc.category}`.toLowerCase();
+      const text = `${svc.name || ""} ${svc.url || ""} ${svc.category || ""}`.toLowerCase();
       const qOk = !q || text.includes(q);
       return catOk && qOk;
     });
@@ -554,7 +525,7 @@
                   <div class="flex flex-wrap gap-2">
                     ${svcs
                       .map((svc) => {
-                        const label = state.techMode ? svc.techName : svc.familyName;
+                        const label = svc.name || svc.url;
                         return `
                           <a
                             href="${escapeHtml(svc.url)}"
