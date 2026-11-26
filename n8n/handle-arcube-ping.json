@@ -109,12 +109,19 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_KANEO_DOMAIN/api/task",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "https://kanban.bizad.in/api/task/fvxzsbqgof89albgazeylb6j",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_KANEO_API_KEY"
+            }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ title: '[' + $('Validate Ping Payload').item.json.origin + '] ' + $('Validate Ping Payload').item.json.service + ' - from ' + $('Validate Ping Payload').item.json.name, description: $('Validate Ping Payload').item.json.message + '\\n\\n---\\nOrigin: ' + $('Validate Ping Payload').item.json.origin + '\\nService: ' + $('Validate Ping Payload').item.json.service + '\\nSender: ' + $('Validate Ping Payload').item.json.name + '\\nTime: ' + $now.toFormat('yyyy-MM-dd HH:mm'), projectId: 'YOUR_KANEO_PROJECT_ID', status: 'to-do', priority: 'medium' }) }}",
+        "jsonBody": "={{ JSON.stringify({ projectId: 'fvxzsbqgof89albgazeylb6j', columnId: 'zniq7qobiefctev3swn5o90j', title: '[' + $('Validate Ping Payload').item.json.origin + '] ' + $('Validate Ping Payload').item.json.service + ' - from ' + $('Validate Ping Payload').item.json.name, description: $('Validate Ping Payload').item.json.message + '\\n\\n---\\nOrigin: ' + $('Validate Ping Payload').item.json.origin + '\\nService: ' + $('Validate Ping Payload').item.json.service + '\\nSender: ' + $('Validate Ping Payload').item.json.name + '\\nTime: ' + $now.toFormat('yyyy-MM-dd HH:mm'), status: 'to-do', priority: 'medium' }) }}",
         "options": {}
       },
       "id": "a9728549-d3a6-4cd5-b534-31c41346ff92",
@@ -122,14 +129,46 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        704,
+        688,
         80
       ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000,
-      "onError": "continueErrorOutput",
-      "notes": "1) Replace YOUR_KANEO_DOMAIN with your Kaneo URL.\n2) Replace YOUR_KANEO_PROJECT_ID with your Kaneo project ID.\n3) Attach your existing n8n HTTP Header Auth credential (Name: Authorization, Value: Bearer <KANEO_API_KEY>). Token stays inside n8n only."
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "personal-inbox",
+          "mode": "name"
+        },
+        "text": "={{ 'Added to Kaneo: [' + $('Validate Ping Payload').item.json.origin + '] ' + $('Validate Ping Payload').item.json.service + ' - from ' + $('Validate Ping Payload').item.json.name + '\\n' + $('Validate Ping Payload').item.json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "b1c2d3e4-5555-4000-8000-000000000009",
+      "name": "Ping personal-inbox",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        928,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "slackApi": {
+          "id": "7Y72pIhpzGp7zP4w",
+          "name": "ARCUBE Bot Token"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Drops a short heads-up in #personal-inbox. Non-blocking so Kaneo + 200 OK still succeed if Slack blips."
     },
     {
       "parameters": {
@@ -144,7 +183,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        960,
+        1168,
         0
       ]
     },
@@ -161,8 +200,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        704,
-        272
+        688,
+        288
       ]
     },
     {
@@ -178,8 +217,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        960,
-        192
+        928,
+        224
       ]
     }
   ],
@@ -229,7 +268,7 @@
       "main": [
         [
           {
-            "node": "Respond Success",
+            "node": "Ping personal-inbox",
             "type": "main",
             "index": 0
           }
@@ -237,6 +276,17 @@
         [
           {
             "node": "Respond Server Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ping personal-inbox": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
             "type": "main",
             "index": 0
           }
