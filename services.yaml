@@ -29,7 +29,7 @@ user:
 
   - name: Jellyfin
     subtitle: Watch Movies & TV Shows
-    url: https://watch.kontour.in
+    url: https://jellyfin.kontour.in
     icon: jellyfin
 
   - name: Paperless
@@ -103,12 +103,17 @@ admin:
 
   - name: Duplicati
     subtitle: Scheduled Backups
-    url: https://backup.kontour.in
+    url: https://bkp.kontour.in
     icon: duplicati
 
-  - name: S3 Storage Console
+  - name: S3 Storage API
     subtitle: Object Storage
-    url: https://s3.kontour.in
+    url: https://s3.int.kontour.in
+    icon: minio
+  
+  - name: S3 Storage Web
+    subtitle: Object Storage
+    url: https://s3-web.int.kontour.in
     icon: minio
 
 # =============================================================================
