@@ -1,14 +1,18 @@
 # ARCUBE
 
-A clean, dark-mode dashboard for **ARCUBE** with separate **User** and **Admin** modes.
+A clean, dark-mode dashboard for **ARCUBE** hosted on GitHub Pages, configured with a single [`services.yaml`](services.yaml) file.
 
-## Modes & Pages
-- **User Mode (Default)**:
-  - **Services**: Everyday home apps (`Immich`, `Jellyfin`, `Paperless`, `Jellyseerr`, `Radarr`, `Sonarr`, `Bazarr`) using `*.kontour.in` website URLs and app icons.
-  - **FAQs**: Plain-English Q&As for family members.
-  - **Contact Arnav**: Form that posts straight to Slack (or an n8n webhook).
-- **Admin Mode**:
-  - Toggle **Switch to Admin** in the sidebar (or mobile header) to reveal **Admin & Debug** (`Portainer`, `Nginx Proxy Manager`, `Tailscale Console`, `Uptime Kuma`, `Syncthing`, `Cockpit`, `Prowlarr`, `n8n`, `Duplicati`, `S3 Storage`) — website URLs only, no raw IPs.
+## Managing Websites (No Code / No Tokens)
+1. Enable **Admin Mode** in ARCUBE and click **Edit services.yaml on GitHub** (or open `services.yaml` directly on GitHub Web / GitHub Mobile).
+2. Add or remove an entry under `user:` or `admin:`:
+   ```yaml
+   - name: Immich
+     subtitle: Family Photos & Videos
+     url: https://photos.kontour.in
+     icon: immich
+   ```
+3. Click **Commit changes** — GitHub Pages automatically redeploys in ~30 seconds.
 
-## Configuration
-Edit `config.js` to adjust any `*.kontour.in` subdomain or paste your Slack / n8n webhook URL into `contact.slackWebhookUrl`.
+## Pages
+- **User Mode (Default)**: **Services**, **FAQs**, and **Contact Arnav** (posts to Slack via `contact.slackWebhookUrl` in `services.yaml`).
+- **Admin Mode**: Unlocks **Admin & Debug** URLs and the **Edit services.yaml on GitHub** shortcut.

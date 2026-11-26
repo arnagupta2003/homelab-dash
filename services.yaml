@@ -1,0 +1,131 @@
+# ARCUBE Configuration
+# Edit this file directly on GitHub to add, edit, or remove websites.
+# Icon names match https://github.com/walkxcode/dashboard-icons (or use a full https:// image URL).
+
+brand:
+  initials: AC
+  title: ARCUBE
+  subtitle: Home Services
+  ownerName: Arnav
+  editUrl: https://github.com/arnagupta2003/homelab-dash/edit/master/services.yaml
+
+banner:
+  statusText: ARCUBE services are online
+  rightText: ARCUBE Private Cloud
+
+contact:
+  # Paste your Slack Incoming Webhook or n8n Webhook URL here:
+  slackWebhookUrl: ""
+  slackChannelLabel: "#arcube-help"
+
+# =============================================================================
+# USER SERVICES (Shown to everyone in User Mode & Admin Mode)
+# =============================================================================
+user:
+  - name: Immich
+    subtitle: Family Photos & Videos
+    url: https://photos.kontour.in
+    icon: immich
+
+  - name: Jellyfin
+    subtitle: Watch Movies & TV Shows
+    url: https://watch.kontour.in
+    icon: jellyfin
+
+  - name: Paperless
+    subtitle: Documents, Bills & PDFs
+    url: https://docs.kontour.in
+    icon: paperless-ngx
+
+  - name: Jellyseerr
+    subtitle: Request Movies & Shows
+    url: https://requests.kontour.in
+    icon: jellyseerr
+
+  - name: Radarr
+    subtitle: Movies Library
+    url: https://radarr.kontour.in
+    icon: radarr
+
+  - name: Sonarr
+    subtitle: TV Shows Library
+    url: https://sonarr.kontour.in
+    icon: sonarr
+
+  - name: Bazarr
+    subtitle: Subtitles
+    url: https://bazarr.kontour.in
+    icon: bazarr
+
+# =============================================================================
+# ADMIN SERVICES (Shown ONLY when Admin Mode is enabled)
+# =============================================================================
+admin:
+  - name: Portainer
+    subtitle: Container Manager
+    url: https://portainer.kontour.in
+    icon: portainer
+
+  - name: Nginx Proxy Manager
+    subtitle: Reverse Proxy & SSL
+    url: https://npm.kontour.in
+    icon: nginx-proxy-manager
+
+  - name: Tailscale Console
+    subtitle: Mesh VPN & Devices
+    url: https://login.tailscale.com/admin/machines
+    icon: tailscale
+
+  - name: Uptime Kuma
+    subtitle: Status & Alerts
+    url: https://uptime.kontour.in
+    icon: uptime-kuma
+
+  - name: Syncthing
+    subtitle: Device Folder Sync
+    url: https://sync.kontour.in
+    icon: syncthing
+
+  - name: Cockpit
+    subtitle: Server System Console
+    url: https://cockpit.kontour.in
+    icon: cockpit
+
+  - name: Prowlarr
+    subtitle: Indexers & Search
+    url: https://prowlarr.kontour.in
+    icon: prowlarr
+
+  - name: n8n
+    subtitle: Workflows & Automations
+    url: https://n8n.kontour.in
+    icon: n8n
+
+  - name: Duplicati
+    subtitle: Scheduled Backups
+    url: https://backup.kontour.in
+    icon: duplicati
+
+  - name: S3 Storage Console
+    subtitle: Object Storage
+    url: https://s3.kontour.in
+    icon: minio
+
+# =============================================================================
+# FAQs (Shown on the FAQs page)
+# =============================================================================
+faqs:
+  - question: How do I back up my phone photos to Immich?
+    answer: Open the Immich app on your phone (or visit photos.kontour.in). In settings, make sure Automatic Backup is turned ON. Whenever you are on Wi-Fi, your photos and videos will back up safely to ARCUBE.
+
+  - question: How do I watch or request movies and TV shows?
+    answer: Click Jellyfin (watch.kontour.in) to watch what's already available. Want a new movie or show? Request it via Jellyseerr (requests.kontour.in), or check Radarr/Sonarr.
+
+  - question: Where do I find family bills, IDs, and PDFs?
+    answer: Click Paperless (docs.kontour.in) to search and view scanned family documents, bills, and receipts.
+
+  - question: What should I do if a website doesn't open?
+    answer: First, check your internet connection—if you are outside the house, make sure the Tailscale app switch is turned ON. Wait 1 minute and refresh. If it still doesn't load, send a message on the Contact Arnav page.
+
+  - question: How do I use ARCUBE apps when I'm traveling?
+    answer: Open the Tailscale app on your phone or laptop and turn it ON. Once connected, all ARCUBE links work just like at home.

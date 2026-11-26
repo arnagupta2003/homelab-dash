@@ -1,10 +1,26 @@
 (function () {
-  const cfg = window.ARCUBE_CONFIG;
-  if (!cfg) return;
+  const ICON_CDN_BASE = "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/";
 
-  const userServices = Array.isArray(cfg.userServices) ? cfg.userServices : [];
-  const adminServices = Array.isArray(cfg.adminServices) ? cfg.adminServices : [];
-  const faqsList = Array.isArray(cfg.faqs) ? cfg.faqs : [];
+  let cfg = {
+    brand: {
+      initials: "AC",
+      title: "ARCUBE",
+      subtitle: "Home Services",
+      ownerName: "Arnav",
+      editUrl: "https://github.com/arnagupta2003/homelab-dash/edit/master/services.yaml",
+    },
+    banner: {
+      statusText: "ARCUBE services are online",
+      rightText: "ARCUBE Private Cloud",
+    },
+    contact: {
+      slackWebhookUrl: "",
+      slackChannelLabel: "#arcube-help",
+    },
+    user: [],
+    admin: [],
+    faqs: [],
+  };
 
   const state = {
     activeTab: "services", // "services" | "admin" | "faqs" | "contact"
@@ -12,6 +28,7 @@
     searchQuery: "",
     sendingSlack: false,
     slackResult: null,
+    loadError: null,
   };
 
   function getNavItems() {
@@ -34,6 +51,12 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function resolveIconUrl(icon) {
+    if (!icon) return "";
+    if (/^https?:\/\//i.test(icon)) return icon;
+    return `${ICON_CDN_BASE}${encodeURIComponent(icon.replace(/\.svg$/i, ""))}.svg`;
   }
 
   function showToast(message) {
@@ -111,7 +134,6 @@
       });
     });
 
-    // Mode toggle UI
     const badge = document.getElementById("mode-badge");
     const toggleLabel = document.getElementById("mode-toggle-label");
     const mobileToggle = document.getElementById("mobile-mode-toggle");
@@ -131,12 +153,13 @@
 
   // --- Service Card (App Image Icon + Website URL) ---
   function renderIcon(svc) {
+    const iconUrl = resolveIconUrl(svc.icon || svc.iconUrl);
     const fallback = escapeHtml(svc.fallbackIcon || "globe");
-    if (svc.iconUrl) {
+    if (iconUrl) {
       return `
         <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 p-2 group-hover:border-zinc-700">
           <img
-            src="${escapeHtml(svc.iconUrl)}"
+            src="${escapeHtml(iconUrl)}"
             alt="${escapeHtml(svc.name)} icon"
             class="h-6 w-6 object-contain"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -155,12 +178,12 @@
   }
 
   function renderRedirectCard(svc, isAdmin = false) {
-    const dotClass = svc.status === "online" ? "bg-emerald-400" : "bg-rose-400";
+    const dotClass = svc.status === "offline" ? "bg-rose-400" : "bg-emerald-400";
     const borderAccent = isAdmin
       ? "border-zinc-800/80 bg-zinc-950/70 hover:border-amber-500/40 hover:bg-zinc-900/70"
       : "border-zinc-800/80 bg-zinc-950/60 hover:border-zinc-600 hover:bg-zinc-900/70";
 
-    const displayUrl = svc.url.replace(/^https?:\/\//, "");
+    const displayUrl = String(svc.url || "").replace(/^https?:\/\//, "");
 
     return `
       <a
@@ -189,16 +212,39 @@
     `;
   }
 
+  function renderEditOnGitHubButton() {
+    if (!cfg.brand.editUrl) return "";
+    return `
+      <a
+        href="${escapeHtml(cfg.brand.editUrl)}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-500/20"
+      >
+        <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+        <span>Edit services.yaml on GitHub</span>
+      </a>
+    `;
+  }
+
   // --- Page Views ---
   function renderServices() {
     const q = state.searchQuery.trim().toLowerCase();
     const filterItem = (s) =>
       !q || `${s.name} ${s.subtitle || ""} ${s.url}`.toLowerCase().includes(q);
 
-    const filteredUser = userServices.filter(filterItem);
-    const filteredAdmin = adminServices.filter(filterItem);
+    const filteredUser = cfg.user.filter(filterItem);
+    const filteredAdmin = cfg.admin.filter(filterItem);
 
     return `
+      ${
+        state.loadError
+          ? `<div class="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-300">
+              Could not load <code class="font-mono-code">services.yaml</code>: ${escapeHtml(state.loadError)}
+            </div>`
+          : ""
+      }
+
       <!-- Welcome / Search Header -->
       <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -207,20 +253,23 @@
             <p class="mt-1.5 text-sm text-zinc-400">
               ${
                 state.adminMode
-                  ? "Admin mode active — showing both User Services and Admin / Debug URLs."
+                  ? "Admin mode active — edit services.yaml directly on GitHub to add or remove websites."
                   : `Click any app below to open it. Need help? Check FAQs or message ${escapeHtml(cfg.brand.ownerName)}.`
               }
             </p>
           </div>
-          <div class="relative w-full sm:w-64">
-            <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
-            <input
-              id="services-search-input"
-              type="text"
-              value="${escapeHtml(state.searchQuery)}"
-              placeholder="Search services..."
-              class="w-full rounded-md border border-zinc-800 bg-zinc-950 py-2 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
-            />
+          <div class="flex flex-wrap items-center gap-2.5">
+            ${state.adminMode ? renderEditOnGitHubButton() : ""}
+            <div class="relative w-full sm:w-56">
+              <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
+              <input
+                id="services-search-input"
+                type="text"
+                value="${escapeHtml(state.searchQuery)}"
+                placeholder="Search services..."
+                class="w-full rounded-md border border-zinc-800 bg-zinc-950 py-2 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -250,13 +299,13 @@
         state.adminMode
           ? `<!-- ADMIN SECTION (Only visible in Admin Mode) -->
              <section class="rounded-xl border border-amber-500/20 bg-zinc-900/30 p-5">
-               <div class="mb-4 flex items-center justify-between gap-2">
+               <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
                  <div>
                    <div class="flex items-center gap-2">
                      <span class="rounded bg-amber-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-amber-400">Admin</span>
                      <h2 class="text-base font-semibold text-zinc-100">Admin &amp; Debug</h2>
                    </div>
-                   <p class="mt-1 text-xs text-zinc-400">Portainer, Nginx Proxy Manager, Tailscale, Cockpit, and monitoring consoles.</p>
+                   <p class="mt-1 text-xs text-zinc-400">Portainer, Nginx Proxy Manager, Tailscale, Uptime Kuma, Syncthing, and consoles.</p>
                  </div>
                </div>
 
@@ -275,7 +324,7 @@
 
   function renderAdminOnly() {
     const q = state.searchQuery.trim().toLowerCase();
-    const filteredAdmin = adminServices.filter(
+    const filteredAdmin = cfg.admin.filter(
       (s) => !q || `${s.name} ${s.subtitle || ""} ${s.url}`.toLowerCase().includes(q)
     );
 
@@ -289,15 +338,18 @@
             </div>
             <p class="mt-1.5 text-sm text-zinc-400">Direct URLs to Portainer, Nginx Proxy Manager, Tailscale, Uptime Kuma, Syncthing, Cockpit, and backups.</p>
           </div>
-          <div class="relative w-full sm:w-64">
-            <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
-            <input
-              id="services-search-input"
-              type="text"
-              value="${escapeHtml(state.searchQuery)}"
-              placeholder="Search admin tools..."
-              class="w-full rounded-md border border-zinc-800 bg-zinc-950 py-2 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
-            />
+          <div class="flex flex-wrap items-center gap-2.5">
+            ${renderEditOnGitHubButton()}
+            <div class="relative w-full sm:w-56">
+              <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
+              <input
+                id="services-search-input"
+                type="text"
+                value="${escapeHtml(state.searchQuery)}"
+                placeholder="Search admin tools..."
+                class="w-full rounded-md border border-zinc-800 bg-zinc-950 py-2 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -316,7 +368,7 @@
       </section>
 
       <section class="space-y-3">
-        ${faqsList
+        ${cfg.faqs
           .map(
             (item, idx) => `
           <div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
@@ -345,7 +397,7 @@
 
   function renderContact() {
     const hasWebhook = Boolean(cfg.contact && cfg.contact.slackWebhookUrl);
-    const serviceNames = userServices.map((s) => s.name);
+    const serviceNames = cfg.user.map((s) => s.name);
 
     return `
       <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
@@ -394,7 +446,7 @@
           ${
             !hasWebhook
               ? `<div class="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
-                  Slack webhook is not configured yet. Add your Slack or n8n webhook URL to <code class="font-mono-code">contact.slackWebhookUrl</code> in <code class="font-mono-code">config.js</code>.
+                  Slack webhook is not configured yet. Add your Slack or n8n webhook URL to <code class="font-mono-code">contact.slackWebhookUrl</code> in <code class="font-mono-code">services.yaml</code>.
                 </div>`
               : ""
           }
@@ -447,7 +499,7 @@
     if (!webhookUrl) {
       state.slackResult = {
         ok: false,
-        message: "Slack webhook URL is missing in config.js. Use 'Copy Message' or configure slackWebhookUrl.",
+        message: "Slack webhook URL is missing in services.yaml. Use 'Copy Message' or add slackWebhookUrl.",
       };
       render();
       return;
@@ -554,6 +606,31 @@
     renderViewOnly();
   }
 
+  // --- Load YAML ---
+  async function loadConfig() {
+    try {
+      const res = await fetch(`./services.yaml?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      if (!window.jsyaml) throw new Error("YAML parser failed to load");
+      const parsed = window.jsyaml.load(text);
+      if (parsed && typeof parsed === "object") {
+        cfg = {
+          brand: { ...cfg.brand, ...(parsed.brand || {}) },
+          banner: { ...cfg.banner, ...(parsed.banner || {}) },
+          contact: { ...cfg.contact, ...(parsed.contact || {}) },
+          user: Array.isArray(parsed.user) ? parsed.user : [],
+          admin: Array.isArray(parsed.admin) ? parsed.admin : [],
+          faqs: Array.isArray(parsed.faqs) ? parsed.faqs : [],
+        };
+      }
+      state.loadError = null;
+    } catch (err) {
+      state.loadError = err.message || String(err);
+    }
+    render();
+  }
+
   // --- Mode Toggle & Mobile Drawer ---
   function toggleAdminMode() {
     state.adminMode = !state.adminMode;
@@ -588,6 +665,7 @@
     document.getElementById("mobile-drawer-backdrop")?.addEventListener("click", closeMobileDrawer);
 
     render();
+    loadConfig();
   }
 
   if (document.readyState === "loading") {
