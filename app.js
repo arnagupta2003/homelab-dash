@@ -1,25 +1,22 @@
 (function () {
-  const cfg = window.HOMELAB_CONFIG;
+  const cfg = window.ARCUBE_CONFIG;
   if (!cfg) return;
 
+  const servicesList = Array.isArray(cfg.services) ? cfg.services : [];
   const debugList = Array.isArray(cfg.debugServices) ? cfg.debugServices : [];
+  const faqsList = Array.isArray(cfg.faqs) ? cfg.faqs : [];
 
   const state = {
-    activeTab: "overview", // "overview" | "apps" | "debug" | "servers" | "help"
-    techMode: false, // false = Family View (default), true = Tech View
+    activeTab: "services", // "services" | "faqs" | "contact"
     searchQuery: "",
-    selectedCategory: "All",
-    debugSearchQuery: "",
-    selectedDebugCategory: "All",
-    lastChecked: new Date(),
+    sendingSlack: false,
+    slackResult: null, // { ok: boolean, message: string }
   };
 
   const NAV_ITEMS = [
-    { id: "overview", label: "Overview", icon: "layout-dashboard" },
-    { id: "apps", label: "Family Apps", techLabel: "Family Apps", icon: "grid-2x2" },
-    { id: "debug", label: "Debug & Admin", techLabel: "Debug & Admin", icon: "terminal" },
-    { id: "servers", label: "5 Servers", techLabel: "5 Server Nodes", icon: "server" },
-    { id: "help", label: "Guides & Help", icon: "book-open-check" },
+    { id: "services", label: "Services", icon: "layout-grid" },
+    { id: "faqs", label: "FAQs", icon: "help-circle" },
+    { id: "contact", label: "Contact Arnav", icon: "message-square" },
   ];
 
   // --- Helpers ---
@@ -32,39 +29,6 @@
       .replace(/'/g, "&#39;");
   }
 
-  function statusMeta(status) {
-    if (status === "online") {
-      return {
-        dot: "bg-emerald-400",
-        pill: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
-        familyLabel: "Working",
-        techLabel: "Online",
-      };
-    }
-    if (status === "restarting") {
-      return {
-        dot: "bg-amber-400",
-        pill: "border-amber-500/20 bg-amber-500/10 text-amber-400",
-        familyLabel: "Updating",
-        techLabel: "Restarting",
-      };
-    }
-    return {
-      dot: "bg-rose-400",
-      pill: "border-rose-500/20 bg-rose-500/10 text-rose-400",
-      familyLabel: "Offline",
-      techLabel: "Down",
-    };
-  }
-
-  function getServerById(id) {
-    return cfg.servers.find((s) => s.id === id);
-  }
-
-  function getServicesForServer(serverId) {
-    return [...cfg.services, ...debugList].filter((svc) => svc.serverId === serverId);
-  }
-
   function showToast(message) {
     const toast = document.getElementById("toast");
     if (!toast) return;
@@ -75,7 +39,7 @@
     window.__toastTimer = setTimeout(() => {
       toast.classList.remove("opacity-100", "translate-y-0");
       toast.classList.add("opacity-0", "translate-y-4");
-    }, 2400);
+    }, 2600);
   }
 
   function refreshIcons() {
@@ -86,7 +50,7 @@
 
   // --- Chrome / Branding / Navigation ---
   function renderBranding() {
-    const { initials, title, subtitle, contactLabel, contactUrl } = cfg.brand;
+    const { initials, title, subtitle } = cfg.brand;
     ["sidebar-initials", "mobile-initials", "drawer-initials"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.textContent = initials;
@@ -100,34 +64,15 @@
       if (el) el.textContent = subtitle;
     });
 
-    const contactBtn = document.getElementById("sidebar-contact-btn");
-    const contactLbl = document.getElementById("sidebar-contact-label");
-    const drawerContact = document.getElementById("drawer-contact-btn");
-    if (contactBtn) contactBtn.href = contactUrl;
-    if (contactLbl) contactLbl.textContent = contactLabel;
-    if (drawerContact) drawerContact.href = contactUrl;
-
-    const onlineCount = cfg.servers.filter((s) => s.status === "online").length;
-    const allOnline = onlineCount === cfg.servers.length;
-    const bannerDot = document.getElementById("banner-dot");
     const bannerText = document.getElementById("banner-text");
     const bannerLocation = document.getElementById("banner-location");
-
-    if (bannerDot) {
-      bannerDot.className = `h-2 w-2 rounded-full ${allOnline ? "bg-emerald-400" : "bg-amber-400"}`;
-    }
-    if (bannerText) {
-      bannerText.textContent = allOnline ? cfg.banner.allGoodText : cfg.banner.degradedText;
-    }
-    if (bannerLocation) {
-      bannerLocation.textContent = cfg.banner.location;
-    }
+    if (bannerText) bannerText.textContent = cfg.banner.statusText;
+    if (bannerLocation) bannerLocation.textContent = cfg.banner.rightText;
   }
 
   function renderNav() {
     const html = NAV_ITEMS.map((item) => {
       const active = state.activeTab === item.id;
-      const label = state.techMode && item.techLabel ? item.techLabel : item.label;
       return `
         <button
           data-tab="${item.id}"
@@ -138,7 +83,7 @@
           }"
         >
           <i data-lucide="${item.icon}" class="h-4 w-4 shrink-0"></i>
-          <span>${escapeHtml(label)}</span>
+          <span>${escapeHtml(item.label)}</span>
         </button>
       `;
     }).join("");
@@ -155,33 +100,40 @@
         render();
       });
     });
-
-    const badge = document.getElementById("mode-badge");
-    const toggleLabel = document.getElementById("mode-toggle-label");
-    const mobileToggle = document.getElementById("mobile-mode-toggle");
-    if (badge) {
-      badge.textContent = state.techMode ? "Tech" : "Family";
-      badge.className = state.techMode
-        ? "rounded bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-medium text-sky-400"
-        : "rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400";
-    }
-    if (toggleLabel) {
-      toggleLabel.textContent = state.techMode ? "Switch to Family View" : "Switch to Tech View";
-    }
-    if (mobileToggle) {
-      mobileToggle.textContent = state.techMode ? "Tech View" : "Family View";
-    }
   }
 
-  // --- Shared Card Renderers ---
-  function renderRedirectCard(svc, isDebug = false) {
-    const st = statusMeta(svc.status);
-    const label = svc.name || svc.familyName || svc.techName || svc.url;
-    const showUrlSub = label !== svc.url;
+  // --- Service Card (App Image Icon + URL) ---
+  function renderIcon(svc) {
+    const fallback = escapeHtml(svc.fallbackIcon || "globe");
+    if (svc.iconUrl) {
+      return `
+        <div class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 p-1.5 group-hover:border-zinc-700">
+          <img
+            src="${escapeHtml(svc.iconUrl)}"
+            alt="${escapeHtml(svc.name)} icon"
+            class="h-5 w-5 object-contain"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
+          />
+          <span style="display:none" class="items-center justify-center text-zinc-300">
+            <i data-lucide="${fallback}" class="h-4 w-4"></i>
+          </span>
+        </div>
+      `;
+    }
+    return `
+      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 group-hover:border-zinc-700">
+        <i data-lucide="${fallback}" class="h-4 w-4"></i>
+      </div>
+    `;
+  }
 
+  function renderRedirectCard(svc, isDebug = false) {
+    const dotClass = svc.status === "online" ? "bg-emerald-400" : "bg-rose-400";
     const borderAccent = isDebug
       ? "border-zinc-800/80 bg-zinc-950/70 hover:border-amber-500/40 hover:bg-zinc-900/70"
       : "border-zinc-800/80 bg-zinc-950/60 hover:border-zinc-600 hover:bg-zinc-900/70";
+
+    const displayUrl = svc.url.replace(/^https?:\/\//, "");
 
     return `
       <a
@@ -191,19 +143,13 @@
         class="group flex items-center justify-between gap-3 rounded-xl border p-3.5 transition-all ${borderAccent}"
       >
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-200 group-hover:border-zinc-700">
-            <i data-lucide="${escapeHtml(svc.icon || "globe")}" class="h-4 w-4"></i>
-          </div>
+          ${renderIcon(svc)}
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <h3 class="truncate text-sm font-semibold text-zinc-100 group-hover:text-white">${escapeHtml(label)}</h3>
-              <span class="h-1.5 w-1.5 shrink-0 rounded-full ${st.dot}"></span>
+              <h3 class="truncate text-sm font-semibold text-zinc-100 group-hover:text-white">${escapeHtml(svc.name)}</h3>
+              <span class="h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}"></span>
             </div>
-            ${
-              showUrlSub
-                ? `<p class="truncate font-mono-code text-[11px] text-zinc-500">${escapeHtml(svc.url)}</p>`
-                : `<p class="truncate text-[11px] text-zinc-500">${isDebug ? "Debug / Admin" : "Click to open"}</p>`
-            }
+            <p class="truncate font-mono-code text-[11px] text-zinc-400">${escapeHtml(displayUrl)}</p>
           </div>
         </div>
         <i data-lucide="arrow-up-right" class="h-4 w-4 shrink-0 text-zinc-500 transition-colors group-hover:text-zinc-200"></i>
@@ -211,406 +157,279 @@
     `;
   }
 
-  // --- Views ---
-  function renderOverview() {
-    const onlineServers = cfg.servers.filter((s) => s.status === "online").length;
-    const onlineServices = cfg.services.filter((s) => s.status === "online").length;
-
-    const heroTitle = state.techMode
-      ? `${cfg.brand.title} — Infrastructure Overview`
-      : `Welcome to ${cfg.brand.title}`;
-    const heroSubtitle = state.techMode
-      ? `5-node self-hosted cluster · ${onlineServices}/${cfg.services.length} family apps · ${debugList.length} debug consoles`
-      : `Everything our family uses at home—photos, movies, smart home & files—in one simple place.`;
-    const heroBody = state.techMode
-      ? `Managed across ${cfg.servers.length} servers. Section 1 lists family click-to-redirect apps; Section 2 holds Portainer, Tailscale, hypervisors, and monitoring.`
-      : `Click any app card in Section 1 to open it right away. Section 2 is for ${cfg.brand.ownerName}'s server maintenance and debugging.`;
-
-    return `
-      <!-- Hero Card -->
-      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
-        <h1 class="text-2xl font-semibold tracking-tight text-zinc-50 sm:text-3xl">${escapeHtml(heroTitle)}</h1>
-        <p class="mt-1.5 text-sm font-medium text-zinc-400">${escapeHtml(heroSubtitle)}</p>
-        <p class="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-300">${escapeHtml(heroBody)}</p>
-        <div class="mt-5 flex flex-wrap gap-2.5">
-          <button data-goto="apps" class="goto-btn inline-flex items-center gap-2 rounded-md bg-zinc-100 px-3.5 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200">
-            <i data-lucide="grid-2x2" class="h-3.5 w-3.5"></i>
-            <span>Family Apps (${cfg.services.length})</span>
-          </button>
-          <button data-goto="debug" class="goto-btn inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-xs font-medium text-zinc-100 transition-colors hover:bg-zinc-800">
-            <i data-lucide="terminal" class="h-3.5 w-3.5"></i>
-            <span>Debug &amp; Admin (${debugList.length})</span>
-          </button>
-          <button data-goto="servers" class="goto-btn inline-flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs font-medium text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100">
-            <i data-lucide="server" class="h-3.5 w-3.5"></i>
-            <span>5 Servers</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- 4 KPI Cards -->
-      <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-4">
-          <p class="text-xs font-medium text-zinc-400">ARCUBE Servers</p>
-          <p class="mt-1.5 font-mono-code text-lg font-semibold text-zinc-100">${onlineServers} / ${cfg.servers.length} Online</p>
-          <p class="mt-1 text-xs text-zinc-500">${state.techMode ? "Proxmox · TrueNAS · GPU · Pi · VPS" : "All 5 home servers running"}</p>
-        </div>
-        <div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-4">
-          <p class="text-xs font-medium text-zinc-400">Family Apps</p>
-          <p class="mt-1.5 font-mono-code text-lg font-semibold text-zinc-100">${onlineServices} Ready</p>
-          <p class="mt-1 text-xs text-zinc-500">Click any card to open</p>
-        </div>
-        <div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-4">
-          <p class="text-xs font-medium text-zinc-400">Debug Consoles</p>
-          <p class="mt-1.5 font-mono-code text-lg font-semibold text-zinc-100">${debugList.length} Tools</p>
-          <p class="mt-1 text-xs text-zinc-500">Portainer, Tailscale &amp; nodes</p>
-        </div>
-        <div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-4">
-          <p class="text-xs font-medium text-zinc-400">Need Help?</p>
-          <p class="mt-1.5 font-mono-code text-lg font-semibold text-zinc-100">Ask ${escapeHtml(cfg.brand.ownerName)}</p>
-          <p class="mt-1 text-xs text-zinc-500">Simple guides in the Help tab</p>
-        </div>
-      </section>
-
-      <!-- SECTION 1: Click-to-Redirect Family Services (Immich, Jellyfin, etc.) -->
-      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="rounded bg-emerald-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Section 1</span>
-              <h2 class="text-base font-semibold text-zinc-100">Family Apps — Click to Open</h2>
-            </div>
-            <p class="mt-1 text-xs text-zinc-400">Everyday home services like Immich photos, Jellyfin movies, files, and smart home.</p>
-          </div>
-          <button data-goto="apps" class="goto-btn text-xs text-zinc-400 hover:text-zinc-200">Filter &amp; search →</button>
-        </div>
-
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          ${cfg.services.map((svc) => renderRedirectCard(svc, false)).join("")}
-        </div>
-      </section>
-
-      <!-- SECTION 2: Debug & Admin Services (Portainer, Tailscale Console, etc.) -->
-      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/30 p-5">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="rounded bg-amber-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-amber-400">Section 2</span>
-              <h2 class="text-base font-semibold text-zinc-100">Debug &amp; Admin Services</h2>
-            </div>
-            <p class="mt-1 text-xs text-zinc-400">Server management consoles (Portainer, Tailscale, Proxmox, TrueNAS, DNS). For ${escapeHtml(cfg.brand.ownerName)} / troubleshooting.</p>
-          </div>
-          <button data-goto="debug" class="goto-btn text-xs text-zinc-400 hover:text-zinc-200">Open full view →</button>
-        </div>
-
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          ${debugList.map((svc) => renderRedirectCard(svc, true)).join("")}
-        </div>
-      </section>
-    `;
-  }
-
-  function renderApps() {
-    const categories = ["All", ...new Set(cfg.services.map((s) => s.category))];
+  // --- Page Views ---
+  function renderServices() {
     const q = state.searchQuery.trim().toLowerCase();
+    const filterItem = (s) =>
+      !q || `${s.name} ${s.subtitle || ""} ${s.url}`.toLowerCase().includes(q);
 
-    const filtered = cfg.services.filter((svc) => {
-      const catOk = state.selectedCategory === "All" || svc.category === state.selectedCategory;
-      const text = `${svc.name || ""} ${svc.url || ""} ${svc.category || ""}`.toLowerCase();
-      const qOk = !q || text.includes(q);
-      return catOk && qOk;
-    });
+    const filteredServices = servicesList.filter(filterItem);
+    const filteredDebug = debugList.filter(filterItem);
 
     return `
-      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
+      <!-- Welcome / Search Header -->
+      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 class="text-xl font-semibold text-zinc-50">Family Apps (Click to Open)</h1>
-            <p class="mt-1 text-xs text-zinc-400">
-              ${state.techMode ? "Section 1: Click-to-redirect family services (Immich, Jellyfin, Nextcloud, etc.)." : "Search or pick a category, then click any card to open the app."}
-            </p>
+            <h1 class="text-2xl font-semibold tracking-tight text-zinc-50 sm:text-3xl">${escapeHtml(cfg.brand.title)}</h1>
+            <p class="mt-1.5 text-sm text-zinc-400">Click any service below to open it. Need help? Check FAQs or message ${escapeHtml(cfg.brand.ownerName)}.</p>
           </div>
           <div class="relative w-full sm:w-64">
             <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
             <input
-              id="apps-search-input"
+              id="services-search-input"
               type="text"
               value="${escapeHtml(state.searchQuery)}"
-              placeholder="Search apps (e.g. photos, movies)..."
+              placeholder="Search services..."
               class="w-full rounded-md border border-zinc-800 bg-zinc-950 py-2 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
             />
           </div>
         </div>
-
-        <div class="mt-4 flex flex-wrap gap-2">
-          ${categories
-            .map((cat) => {
-              const active = state.selectedCategory === cat;
-              return `
-                <button
-                  data-category="${escapeHtml(cat)}"
-                  class="cat-pill-btn rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    active
-                      ? "bg-zinc-100 text-zinc-950"
-                      : "border border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
-                  }"
-                >
-                  ${escapeHtml(cat)}
-                </button>
-              `;
-            })
-            .join("")}
-        </div>
       </section>
 
-      ${
-        filtered.length === 0
-          ? `<div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-8 text-center">
-              <p class="text-sm font-medium text-zinc-300">No apps matched your search.</p>
-              <button id="clear-filters-btn" class="mt-3 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800">Reset Filters</button>
-            </div>`
-          : `<section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">${filtered.map((svc) => renderRedirectCard(svc, false)).join("")}</section>`
-      }
-    `;
-  }
-
-  function renderDebug() {
-    const categories = ["All", ...new Set(debugList.map((s) => s.category))];
-    const q = state.debugSearchQuery.trim().toLowerCase();
-
-    const filtered = debugList.filter((svc) => {
-      const catOk = state.selectedDebugCategory === "All" || svc.category === state.selectedDebugCategory;
-      const text = `${svc.name || ""} ${svc.url || ""} ${svc.category || ""}`.toLowerCase();
-      const qOk = !q || text.includes(q);
-      return catOk && qOk;
-    });
-
-    return `
+      <!-- SECTION 1: Click-to-Redirect Services -->
       <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-xl font-semibold text-zinc-50">Debug &amp; Admin Services</h1>
-              <span class="rounded bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">Admin Only</span>
-            </div>
-            <p class="mt-1 text-xs text-zinc-400">
-              Portainer, Tailscale console, Proxmox, TrueNAS, AdGuard DNS, and monitoring tools.
-            </p>
+        <div class="mb-4">
+          <div class="flex items-center gap-2">
+            <span class="rounded bg-emerald-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Section 1</span>
+            <h2 class="text-base font-semibold text-zinc-100">Services</h2>
           </div>
-          <div class="relative w-full sm:w-64">
-            <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
-            <input
-              id="debug-search-input"
-              type="text"
-              value="${escapeHtml(state.debugSearchQuery)}"
-              placeholder="Search debug tools (e.g. portainer)..."
-              class="w-full rounded-md border border-zinc-800 bg-zinc-950 py-2 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
-            />
-          </div>
+          <p class="mt-1 text-xs text-zinc-400">Everyday apps like Immich, Jellyfin, Ghost, and Syncthing. Click any card to open.</p>
         </div>
 
-        <div class="mt-4 flex flex-wrap gap-2">
-          ${categories
-            .map((cat) => {
-              const active = state.selectedDebugCategory === cat;
-              return `
-                <button
-                  data-debug-category="${escapeHtml(cat)}"
-                  class="debug-cat-pill-btn rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    active
-                      ? "bg-zinc-100 text-zinc-950"
-                      : "border border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
-                  }"
-                >
-                  ${escapeHtml(cat)}
-                </button>
-              `;
-            })
-            .join("")}
-        </div>
+        ${
+          filteredServices.length === 0
+            ? `<p class="text-xs text-zinc-500">No matching services.</p>`
+            : `<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                ${filteredServices.map((svc) => renderRedirectCard(svc, false)).join("")}
+              </div>`
+        }
       </section>
 
-      ${
-        filtered.length === 0
-          ? `<div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-8 text-center">
-              <p class="text-sm font-medium text-zinc-300">No debug tools matched your search.</p>
-              <button id="clear-debug-filters-btn" class="mt-3 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800">Reset Filters</button>
-            </div>`
-          : `<section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">${filtered.map((svc) => renderRedirectCard(svc, true)).join("")}</section>`
-      }
-    `;
-  }
-
-  function renderMetricBar(label, value) {
-    const color = value > 85 ? "bg-rose-400" : value > 65 ? "bg-amber-400" : "bg-emerald-400";
-    return `
-      <div>
-        <div class="flex justify-between text-[11px] text-zinc-400">
-          <span>${escapeHtml(label)}</span>
-          <span class="font-mono-code text-zinc-300">${value}%</span>
-        </div>
-        <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
-          <div class="h-full rounded-full ${color}" style="width: ${value}%"></div>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderServers() {
-    return `
-      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 class="text-xl font-semibold text-zinc-50">${state.techMode ? "ARCUBE Cluster Nodes (5 Servers)" : "Our 5 Home Servers"}</h1>
-            <p class="mt-1 text-xs text-zinc-400">
-              ${
-                state.techMode
-                  ? "Hardware specs, local IPs, uptime, and hosted workloads."
-                  : "These 5 computers run all of our family's apps. Green means everything is working fine."
-              }
-            </p>
+      <!-- SECTION 2: Debug & Admin Services -->
+      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/30 p-5">
+        <div class="mb-4">
+          <div class="flex items-center gap-2">
+            <span class="rounded bg-amber-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-amber-400">Section 2</span>
+            <h2 class="text-base font-semibold text-zinc-100">Debug &amp; Admin</h2>
           </div>
-          <span class="font-mono-code text-[11px] text-zinc-500">
-            Last checked: ${state.lastChecked.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-          </span>
+          <p class="mt-1 text-xs text-zinc-400">Portainer, Tailscale console, Cockpit, and proxy/monitoring tools.</p>
         </div>
+
+        ${
+          filteredDebug.length === 0
+            ? `<p class="text-xs text-zinc-500">No matching debug services.</p>`
+            : `<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                ${filteredDebug.map((svc) => renderRedirectCard(svc, true)).join("")}
+              </div>`
+        }
+      </section>
+    `;
+  }
+
+  function renderFaqs() {
+    return `
+      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
+        <h1 class="text-2xl font-semibold tracking-tight text-zinc-50">FAQs</h1>
+        <p class="mt-1.5 text-sm text-zinc-400">Quick answers for common questions. Still stuck? Use Contact Arnav.</p>
       </section>
 
       <section class="space-y-3">
-        ${cfg.servers
-          .map((srv) => {
-            const st = statusMeta(srv.status);
-            const svcs = getServicesForServer(srv.id);
-            const title = state.techMode ? srv.techName : srv.familyName;
-
-            return `
-              <div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                  <div class="flex items-start gap-3">
-                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-200">
-                      <i data-lucide="server" class="h-4 w-4"></i>
-                    </div>
-                    <div>
-                      <div class="flex flex-wrap items-center gap-2">
-                        <h2 class="text-sm font-semibold text-zinc-100">${escapeHtml(title)}</h2>
-                        <span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${st.pill}">
-                          <span class="h-1.5 w-1.5 rounded-full ${st.dot}"></span>
-                          ${escapeHtml(state.techMode ? st.techLabel : st.familyLabel)}
-                        </span>
-                      </div>
-                      <p class="mt-1 text-xs text-zinc-300">${escapeHtml(srv.role)}</p>
-                      <p class="mt-1 text-[11px] text-zinc-500">
-                        ${
-                          state.techMode
-                            ? `${escapeHtml(srv.specs)} · IP: ${escapeHtml(srv.ip)} · Uptime: ${escapeHtml(srv.uptime)}`
-                            : `Location: ${escapeHtml(srv.location)}`
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                ${
-                  state.techMode
-                    ? `<div class="mt-4 grid grid-cols-1 gap-3 border-t border-zinc-800/60 pt-4 sm:grid-cols-3">
-                        ${renderMetricBar("CPU", srv.metrics.cpu)}
-                        ${renderMetricBar("Memory", srv.metrics.ram)}
-                        ${renderMetricBar("Storage", srv.metrics.disk)}
-                      </div>`
-                    : ""
-                }
-
-                <div class="mt-4 border-t border-zinc-800/60 pt-3">
-                  <p class="mb-2 text-[11px] font-medium text-zinc-400">Services running on this server:</p>
-                  <div class="flex flex-wrap gap-2">
-                    ${svcs
-                      .map((svc) => {
-                        const label = svc.name || svc.url;
-                        return `
-                          <a
-                            href="${escapeHtml(svc.url)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950/80 px-2.5 py-1 text-xs text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900"
-                          >
-                            <i data-lucide="${escapeHtml(svc.icon || "box")}" class="h-3 w-3 text-zinc-400"></i>
-                            <span>${escapeHtml(label)}</span>
-                            <i data-lucide="arrow-up-right" class="h-3 w-3 text-zinc-500"></i>
-                          </a>
-                        `;
-                      })
-                      .join("")}
-                  </div>
-                </div>
-              </div>
-            `;
-          })
-          .join("")}
-      </section>
-    `;
-  }
-
-  function renderHelp() {
-    return `
-      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
-        <h1 class="text-xl font-semibold text-zinc-50">Family Guides &amp; Help</h1>
-        <p class="mt-1 text-xs text-zinc-400">${escapeHtml(cfg.brand.supportNote)}</p>
-        <div class="mt-4 flex flex-wrap gap-2.5">
-          <button id="copy-status-btn" class="inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-xs font-medium text-zinc-100 transition-colors hover:bg-zinc-800">
-            <i data-lucide="copy" class="h-3.5 w-3.5"></i>
-            <span>Copy Health Report for ${escapeHtml(cfg.brand.ownerName)}</span>
-          </button>
-          <a href="${escapeHtml(cfg.brand.contactUrl)}" class="inline-flex items-center gap-2 rounded-md bg-zinc-100 px-3.5 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200">
-            <i data-lucide="mail" class="h-3.5 w-3.5"></i>
-            <span>${escapeHtml(cfg.brand.contactLabel)}</span>
-          </a>
-        </div>
-      </section>
-
-      <section class="grid grid-cols-1 gap-3 md:grid-cols-2">
-        ${cfg.guides
+        ${faqsList
           .map(
-            (g, idx) => `
+            (item, idx) => `
           <div class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
-            <div class="flex items-center gap-2.5">
-              <span class="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 font-mono-code text-xs font-semibold text-zinc-300">${idx + 1}</span>
-              <h2 class="text-sm font-semibold text-zinc-100">${escapeHtml(g.title)}</h2>
+            <div class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 font-mono-code text-xs font-semibold text-zinc-300">${idx + 1}</span>
+              <div>
+                <h2 class="text-sm font-semibold text-zinc-100">${escapeHtml(item.question)}</h2>
+                <p class="mt-2 text-xs leading-relaxed text-zinc-300">${escapeHtml(item.answer)}</p>
+              </div>
             </div>
-            <ol class="mt-3 space-y-2 pl-1 text-xs leading-relaxed text-zinc-300">
-              ${g.steps
-                .map(
-                  (step, sIdx) => `
-                <li class="flex gap-2">
-                  <span class="font-mono-code text-zinc-500">${sIdx + 1}.</span>
-                  <span>${escapeHtml(step)}</span>
-                </li>
-              `
-                )
-                .join("")}
-            </ol>
           </div>
         `
           )
           .join("")}
       </section>
+
+      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5 flex flex-wrap items-center justify-between gap-3">
+        <p class="text-xs text-zinc-300">Didn't find what you were looking for?</p>
+        <button id="faq-goto-contact" class="inline-flex items-center gap-2 rounded-md bg-zinc-100 px-3.5 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200">
+          <i data-lucide="message-square" class="h-3.5 w-3.5"></i>
+          <span>Contact ${escapeHtml(cfg.brand.ownerName)}</span>
+        </button>
+      </section>
     `;
+  }
+
+  function renderContact() {
+    const hasWebhook = Boolean(cfg.contact && cfg.contact.slackWebhookUrl);
+    const allServiceNames = [...servicesList, ...debugList].map((s) => s.name);
+
+    return `
+      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
+        <h1 class="text-2xl font-semibold tracking-tight text-zinc-50">Contact ${escapeHtml(cfg.brand.ownerName)}</h1>
+        <p class="mt-1.5 text-sm text-zinc-400">
+          Send a message straight to Slack (${escapeHtml(cfg.contact?.slackChannelLabel || "#arcube-help")}) so automated workflows or ${escapeHtml(cfg.brand.ownerName)} can reply right away.
+        </p>
+      </section>
+
+      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
+        <form id="slack-contact-form" class="space-y-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="contact-name" class="block text-xs font-medium text-zinc-300">Your Name</label>
+              <input
+                id="contact-name"
+                type="text"
+                required
+                placeholder="e.g. Mom, Dad, ..."
+                class="mt-1.5 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label for="contact-service" class="block text-xs font-medium text-zinc-300">Which App / Topic?</label>
+              <select
+                id="contact-service"
+                class="mt-1.5 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 focus:border-zinc-600 focus:outline-none"
+              >
+                <option value="General Question">General Question</option>
+                ${allServiceNames.map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="contact-message" class="block text-xs font-medium text-zinc-300">What do you need help with?</label>
+            <textarea
+              id="contact-message"
+              rows="4"
+              required
+              placeholder="Example: Immich isn't backing up my new photos..."
+              class="mt-1.5 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+            ></textarea>
+          </div>
+
+          ${
+            !hasWebhook
+              ? `<div class="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
+                  Slack webhook is not configured yet. Add your Slack or n8n webhook URL to <code class="font-mono-code">contact.slackWebhookUrl</code> in <code class="font-mono-code">config.js</code>.
+                </div>`
+              : ""
+          }
+
+          ${
+            state.slackResult
+              ? `<div class="rounded-lg border ${
+                  state.slackResult.ok
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                    : "border-rose-500/30 bg-rose-500/10 text-rose-300"
+                } p-3 text-xs">
+                  ${escapeHtml(state.slackResult.message)}
+                </div>`
+              : ""
+          }
+
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <button
+              type="submit"
+              ${state.sendingSlack ? "disabled" : ""}
+              class="inline-flex items-center gap-2 rounded-md bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200 disabled:opacity-50"
+            >
+              <i data-lucide="send" class="h-3.5 w-3.5"></i>
+              <span>${state.sendingSlack ? "Sending to Slack..." : "Send Message to Slack"}</span>
+            </button>
+
+            <button
+              type="button"
+              id="copy-contact-msg-btn"
+              class="inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-xs font-medium text-zinc-200 transition-colors hover:bg-zinc-800"
+            >
+              <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+              <span>Copy Message</span>
+            </button>
+          </div>
+        </form>
+      </section>
+    `;
+  }
+
+  // --- Slack Submission ---
+  async function handleSlackSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById("contact-name")?.value.trim() || "Family Member";
+    const service = document.getElementById("contact-service")?.value || "General Question";
+    const message = document.getElementById("contact-message")?.value.trim() || "";
+    if (!message) return;
+
+    const webhookUrl = cfg.contact?.slackWebhookUrl?.trim();
+    if (!webhookUrl) {
+      state.slackResult = {
+        ok: false,
+        message: "Slack webhook URL is missing in config.js. Use 'Copy Message' or configure slackWebhookUrl.",
+      };
+      render();
+      return;
+    }
+
+    state.sendingSlack = true;
+    state.slackResult = null;
+    render();
+
+    const payload = {
+      text: `*ARCUBE Help Request*\n*From:* ${name}\n*Service:* ${service}\n*Message:* ${message}`,
+      name,
+      service,
+      message,
+      source: "ARCUBE Dashboard",
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      const isSlackHooks = webhookUrl.includes("hooks.slack.com");
+      if (isSlackHooks) {
+        // Slack incoming webhooks block CORS preflight for application/json;
+        // sending form-urlencoded or no-cors delivers the payload reliably from static sites.
+        await fetch(webhookUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `payload=${encodeURIComponent(JSON.stringify({ text: payload.text }))}`,
+        });
+      } else {
+        // n8n or custom webhook endpoint
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
+      }
+
+      state.slackResult = {
+        ok: true,
+        message: `Sent to Slack! ${cfg.brand.ownerName}'s workflows have received your message.`,
+      };
+      showToast("Message posted to Slack!");
+    } catch (err) {
+      state.slackResult = {
+        ok: false,
+        message: `Could not reach Slack webhook (${err.message}). Try 'Copy Message' instead.`,
+      };
+    } finally {
+      state.sendingSlack = false;
+      render();
+    }
   }
 
   // --- Event Binding & Main Render ---
   function bindViewEvents() {
-    document.querySelectorAll(".goto-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.activeTab = btn.getAttribute("data-goto");
-        render();
-      });
-    });
-
-    const searchInput = document.getElementById("apps-search-input");
+    const searchInput = document.getElementById("services-search-input");
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
         state.searchQuery = e.target.value;
         renderViewOnly();
-        const restored = document.getElementById("apps-search-input");
+        const restored = document.getElementById("services-search-input");
         if (restored) {
           restored.focus();
           restored.setSelectionRange(restored.value.length, restored.value.length);
@@ -618,69 +437,32 @@
       });
     }
 
-    const debugSearchInput = document.getElementById("debug-search-input");
-    if (debugSearchInput) {
-      debugSearchInput.addEventListener("input", (e) => {
-        state.debugSearchQuery = e.target.value;
-        renderViewOnly();
-        const restored = document.getElementById("debug-search-input");
-        if (restored) {
-          restored.focus();
-          restored.setSelectionRange(restored.value.length, restored.value.length);
-        }
-      });
-    }
-
-    document.querySelectorAll(".cat-pill-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.selectedCategory = btn.getAttribute("data-category");
-        render();
-      });
-    });
-
-    document.querySelectorAll(".debug-cat-pill-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.selectedDebugCategory = btn.getAttribute("data-debug-category");
-        render();
-      });
-    });
-
-    document.getElementById("clear-filters-btn")?.addEventListener("click", () => {
-      state.searchQuery = "";
-      state.selectedCategory = "All";
+    document.getElementById("faq-goto-contact")?.addEventListener("click", () => {
+      state.activeTab = "contact";
       render();
     });
 
-    document.getElementById("clear-debug-filters-btn")?.addEventListener("click", () => {
-      state.debugSearchQuery = "";
-      state.selectedDebugCategory = "All";
-      render();
-    });
+    document.getElementById("slack-contact-form")?.addEventListener("submit", handleSlackSubmit);
 
-    const copyBtn = document.getElementById("copy-status-btn");
-    if (copyBtn) {
-      copyBtn.addEventListener("click", () => {
-        const lines = [
-          `${cfg.brand.title} Status (${new Date().toLocaleString()})`,
-          ...cfg.servers.map((s) => `- ${s.familyName} (${s.techName}): ${s.status}`),
-        ];
-        navigator.clipboard
-          ?.writeText(lines.join("\n"))
-          .then(() => showToast("Health report copied! Paste it to Arnav."))
-          .catch(() => showToast("Could not copy automatically."));
-      });
-    }
+    document.getElementById("copy-contact-msg-btn")?.addEventListener("click", () => {
+      const name = document.getElementById("contact-name")?.value.trim() || "Family";
+      const service = document.getElementById("contact-service")?.value || "General";
+      const message = document.getElementById("contact-message")?.value.trim() || "";
+      const text = `ARCUBE Help (${service}) from ${name}: ${message}`;
+      navigator.clipboard
+        ?.writeText(text)
+        .then(() => showToast("Message copied!"))
+        .catch(() => showToast("Could not copy automatically."));
+    });
   }
 
   function renderViewOnly() {
     const container = document.getElementById("view-container");
     if (!container) return;
 
-    if (state.activeTab === "overview") container.innerHTML = renderOverview();
-    else if (state.activeTab === "apps") container.innerHTML = renderApps();
-    else if (state.activeTab === "debug") container.innerHTML = renderDebug();
-    else if (state.activeTab === "servers") container.innerHTML = renderServers();
-    else if (state.activeTab === "help") container.innerHTML = renderHelp();
+    if (state.activeTab === "services") container.innerHTML = renderServices();
+    else if (state.activeTab === "faqs") container.innerHTML = renderFaqs();
+    else if (state.activeTab === "contact") container.innerHTML = renderContact();
 
     bindViewEvents();
     refreshIcons();
@@ -694,33 +476,26 @@
 
   // --- Mobile Drawer ---
   function openMobileDrawer() {
-    const drawer = document.getElementById("mobile-drawer");
-    if (drawer) drawer.classList.remove("hidden");
+    document.getElementById("mobile-drawer")?.classList.remove("hidden");
   }
 
   function closeMobileDrawer() {
-    const drawer = document.getElementById("mobile-drawer");
-    if (drawer) drawer.classList.add("hidden");
+    document.getElementById("mobile-drawer")?.classList.add("hidden");
   }
 
-  function toggleMode() {
-    state.techMode = !state.techMode;
+  function goToContact() {
+    state.activeTab = "contact";
+    closeMobileDrawer();
     render();
-    showToast(state.techMode ? "Switched to Tech View" : "Switched to Family View");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("desktop-mode-toggle")?.addEventListener("click", toggleMode);
-    document.getElementById("mobile-mode-toggle")?.addEventListener("click", toggleMode);
+    document.getElementById("sidebar-contact-btn")?.addEventListener("click", goToContact);
+    document.getElementById("mobile-contact-btn")?.addEventListener("click", goToContact);
+    document.getElementById("drawer-contact-btn")?.addEventListener("click", goToContact);
     document.getElementById("mobile-menu-btn")?.addEventListener("click", openMobileDrawer);
     document.getElementById("mobile-drawer-close")?.addEventListener("click", closeMobileDrawer);
     document.getElementById("mobile-drawer-backdrop")?.addEventListener("click", closeMobileDrawer);
-
-    document.getElementById("refresh-status-btn")?.addEventListener("click", () => {
-      state.lastChecked = new Date();
-      render();
-      showToast("All 5 ARCUBE servers checked — everything looks good!");
-    });
 
     render();
   });

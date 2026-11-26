@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARCUBE — Homelab &amp; Family Dashboard</title>
-  <meta name="description" content="ARCUBE homelab dashboard for our 5 servers, family apps, and admin/debug tools." />
+  <title>ARCUBE — Services &amp; Support</title>
+  <meta name="description" content="ARCUBE services, FAQs, and support." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -41,8 +41,8 @@
         <span id="mobile-brand-title" class="text-sm font-semibold">ARCUBE</span>
       </div>
       <div class="flex items-center gap-2">
-        <button id="mobile-mode-toggle" class="rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-zinc-200 hover:bg-zinc-800">
-          Family View
+        <button id="mobile-contact-btn" class="rounded-md bg-zinc-100 px-2.5 py-1.5 text-xs font-semibold text-zinc-950">
+          Contact Arnav
         </button>
         <button id="mobile-menu-btn" aria-label="Toggle navigation" class="rounded-md border border-zinc-800 p-1.5 text-zinc-300 hover:bg-zinc-900">
           <i data-lucide="menu" class="h-4 w-4"></i>
@@ -60,7 +60,7 @@
               <div id="drawer-initials" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 font-mono-code text-sm font-semibold text-zinc-100">AC</div>
               <div class="min-w-0">
                 <p id="drawer-brand-title" class="truncate text-sm font-semibold text-zinc-100">ARCUBE</p>
-                <p id="drawer-brand-subtitle" class="truncate text-xs text-zinc-400">Home Cloud · 5 Servers</p>
+                <p id="drawer-brand-subtitle" class="truncate text-xs text-zinc-400">Home Services</p>
               </div>
             </div>
             <button id="mobile-drawer-close" aria-label="Close navigation" class="rounded-md p-1 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
@@ -70,10 +70,10 @@
           <nav id="mobile-nav" class="space-y-1"></nav>
         </div>
         <div class="space-y-2 border-t border-zinc-800/80 pt-4">
-          <a id="drawer-contact-btn" href="#" class="flex w-full items-center justify-center gap-2 rounded-md bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200">
-            <i data-lucide="life-buoy" class="h-3.5 w-3.5"></i>
-            <span>Ask Arnav for Help</span>
-          </a>
+          <button id="drawer-contact-btn" class="flex w-full items-center justify-center gap-2 rounded-md bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200">
+            <i data-lucide="message-square" class="h-3.5 w-3.5"></i>
+            <span>Contact Arnav</span>
+          </button>
         </div>
       </aside>
     </div>
@@ -88,35 +88,18 @@
               <div id="sidebar-initials" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 font-mono-code text-sm font-semibold text-zinc-100">AC</div>
               <div class="min-w-0">
                 <p id="sidebar-brand-title" class="truncate text-sm font-semibold text-zinc-100">ARCUBE</p>
-                <p id="sidebar-brand-subtitle" class="truncate text-xs text-zinc-400">Home Cloud · 5 Servers</p>
+                <p id="sidebar-brand-subtitle" class="truncate text-xs text-zinc-400">Home Services</p>
               </div>
             </div>
 
             <nav id="desktop-nav" class="space-y-1"></nav>
           </div>
 
-          <div class="space-y-2.5 border-t border-zinc-800/80 pt-4">
-            <!-- Family vs Tech Mode Switch -->
-            <div class="rounded-lg border border-zinc-800/90 bg-zinc-900/50 p-2.5">
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] font-medium text-zinc-400">View Mode</span>
-                <span id="mode-badge" class="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">Family</span>
-              </div>
-              <button id="desktop-mode-toggle" class="mt-2 flex w-full items-center justify-between rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-900">
-                <span id="mode-toggle-label">Switch to Tech View</span>
-                <i data-lucide="sliders-horizontal" class="h-3.5 w-3.5 text-zinc-400"></i>
-              </button>
-            </div>
-
-            <button id="refresh-status-btn" class="flex w-full items-center justify-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 transition-colors hover:border-zinc-700 hover:bg-zinc-800">
-              <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
-              <span>Check All Servers</span>
+          <div class="space-y-2 border-t border-zinc-800/80 pt-4">
+            <button id="sidebar-contact-btn" class="flex w-full items-center justify-center gap-2 rounded-md bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200">
+              <i data-lucide="message-square" class="h-3.5 w-3.5"></i>
+              <span id="sidebar-contact-label">Contact Arnav</span>
             </button>
-
-            <a id="sidebar-contact-btn" href="#" class="flex w-full items-center justify-center gap-2 rounded-md bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200">
-              <i data-lucide="life-buoy" class="h-3.5 w-3.5"></i>
-              <span id="sidebar-contact-label">Message Arnav</span>
-            </a>
           </div>
         </div>
       </aside>
@@ -127,11 +110,11 @@
         <div id="status-banner" class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-800/90 bg-zinc-900/50 px-4 py-2.5">
           <div class="flex items-center gap-2.5 text-xs sm:text-sm">
             <span id="banner-dot" class="h-2 w-2 rounded-full bg-emerald-400"></span>
-            <span id="banner-text" class="font-medium text-zinc-200">All 5 home servers are online and working normally</span>
+            <span id="banner-text" class="font-medium text-zinc-200">ARCUBE services are online</span>
           </div>
           <div class="flex items-center gap-2 text-xs text-zinc-400">
-            <i data-lucide="map-pin" class="h-3.5 w-3.5"></i>
-            <span id="banner-location">Home Network · Bangalore</span>
+            <i data-lucide="shield-check" class="h-3.5 w-3.5"></i>
+            <span id="banner-location">ARCUBE Private Cloud</span>
           </div>
         </div>
 

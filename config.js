@@ -1,152 +1,240 @@
 /**
- * ARCUBE Homelab Dashboard Configuration
+ * ARCUBE Configuration
  * ---------------------------------------------------------------------------
- * Section 1 ("services"): Click-to-open websites for everyday use.
- * Section 2 ("debugServices"): Admin & debug consoles.
+ * - services: Section 1 (Everyday click-to-redirect apps)
+ * - debugServices: Section 2 (Admin & debug tools)
+ * - contact.slackWebhookUrl: Paste your Slack Incoming Webhook or n8n Webhook URL
+ *   so family messages from the "Contact Arnav" page post straight to Slack.
  */
 
-window.HOMELAB_CONFIG = {
+window.ARCUBE_CONFIG = {
   brand: {
     initials: "AC",
     title: "ARCUBE",
-    subtitle: "Home Cloud · 5 Servers",
+    subtitle: "Home Services",
     ownerName: "Arnav",
-    supportNote: "If something isn't loading, wait 1 minute and refresh. Still stuck? Message Arnav.",
-    contactLabel: "Message Arnav",
-    contactUrl: "mailto:arnav@example.com",
   },
 
   banner: {
-    location: "Home Network · Bangalore",
-    allGoodText: "All 5 ARCUBE servers are online and working normally",
-    degradedText: "Some services are currently restarting or offline",
+    statusText: "ARCUBE services are online",
+    rightText: "ARCUBE Private Cloud",
   },
 
-  servers: [
-    {
-      id: "srv-1",
-      familyName: "Main App Server",
-      techName: "192.168.1.5",
-      role: "Primary home server",
-      location: "Home",
-      status: "online",
-      uptime: "Online",
-      ip: "192.168.1.5",
-      specs: "Primary Host",
-      metrics: { cpu: 28, ram: 61, disk: 58 },
-    },
-    {
-      id: "srv-2",
-      familyName: "Proxy Gateway",
-      techName: "127.0.0.1",
-      role: "Web routing & SSL",
-      location: "Gateway",
-      status: "online",
-      uptime: "Online",
-      ip: "127.0.0.1",
-      specs: "Nginx Proxy Manager",
-      metrics: { cpu: 8, ram: 24, disk: 19 },
-    },
-    {
-      id: "srv-3",
-      familyName: "Node 2",
-      techName: "190.1.0.2",
-      role: "Secondary proxy node",
-      location: "Network",
-      status: "online",
-      uptime: "Online",
-      ip: "190.1.0.2",
-      specs: "Proxy Node",
-      metrics: { cpu: 10, ram: 29, disk: 22 },
-    },
-    {
-      id: "srv-4",
-      familyName: "Node 3",
-      techName: "190.1.0.3",
-      role: "Worker node",
-      location: "Network",
-      status: "online",
-      uptime: "Online",
-      ip: "190.1.0.3",
-      specs: "Worker Node",
-      metrics: { cpu: 14, ram: 35, disk: 30 },
-    },
-    {
-      id: "srv-5",
-      familyName: "Monitoring Server",
-      techName: "190.1.0.4",
-      role: "Uptime monitoring",
-      location: "Network",
-      status: "online",
-      uptime: "Online",
-      ip: "190.1.0.4",
-      specs: "Uptime Kuma",
-      metrics: { cpu: 11, ram: 32, disk: 25 },
-    },
-  ],
+  contact: {
+    // Paste your Slack Incoming Webhook URL or n8n Webhook URL here:
+    // Example Slack: "https://hooks.slack.com/services/T000/B000/XXXX"
+    // Example n8n:   "https://n8n.kontour.in/webhook/arcube-help"
+    slackWebhookUrl: "",
+    slackChannelLabel: "#arcube-help",
+    fallbackEmail: "mailto:arnav@example.com",
+  },
 
-  // SECTION 1: Click-to-Redirect Websites (with App Icons)
+  // SECTION 1: Everyday Services (Click-to-Redirect with App Icons)
+  // Icons use dashboard-icons (walkxcode/dashboard-icons) with Lucide fallback.
   services: [
-    { name: "Immich", url: "http://192.168.1.5:2283", icon: "image", status: "online", serverId: "srv-1", category: "Photos" },
-    { name: "Jellyfin", url: "http://192.168.1.5:8096", icon: "film", status: "online", serverId: "srv-1", category: "Media" },
-    { name: "Ghost", url: "http://192.168.1.5:2368", icon: "book-open", status: "online", serverId: "srv-1", category: "Notes" },
-    { name: "Syncthing", url: "http://192.168.1.5:8384", icon: "folder-sync", status: "online", serverId: "srv-1", category: "Files" },
-    { name: "http://192.168.1.5:8580", url: "http://192.168.1.5:8580", icon: "globe", status: "online", serverId: "srv-1", category: "Web" },
-    { name: "http://192.168.1.5:8200", url: "http://192.168.1.5:8200", icon: "globe", status: "online", serverId: "srv-1", category: "Web" },
-    { name: "http://192.168.1.5:5000", url: "http://192.168.1.5:5000", icon: "globe", status: "online", serverId: "srv-1", category: "Web" },
-    { name: "http://192.168.1.5:8088", url: "http://192.168.1.5:8088", icon: "globe", status: "online", serverId: "srv-1", category: "Web" },
-    { name: "http://192.168.1.5:8051", url: "http://192.168.1.5:8051", icon: "globe", status: "online", serverId: "srv-1", category: "Web" },
-    { name: "http://192.168.1.5:8080", url: "http://192.168.1.5:8080", icon: "globe", status: "online", serverId: "srv-1", category: "Web" },
-    { name: "http://192.168.1.5:8000", url: "http://192.168.1.5:8000", icon: "globe", status: "online", serverId: "srv-1", category: "Web" },
-    { name: "http://192.168.1.5:8430", url: "http://192.168.1.5:8430", icon: "globe", status: "online", serverId: "srv-1", category: "Web" },
+    {
+      name: "Immich",
+      subtitle: "Family Photos & Videos",
+      url: "https://photos.kontour.in",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/immich.svg",
+      fallbackIcon: "image",
+      status: "online",
+    },
+    {
+      name: "Jellyfin",
+      subtitle: "Movies & TV Shows",
+      url: "http://192.168.1.5:8096",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyfin.svg",
+      fallbackIcon: "film",
+      status: "online",
+    },
+    {
+      name: "Ghost",
+      subtitle: "Blog & Notes",
+      url: "http://192.168.1.5:2368",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/ghost.svg",
+      fallbackIcon: "book-open",
+      status: "online",
+    },
+    {
+      name: "Syncthing",
+      subtitle: "Folder & File Sync",
+      url: "http://192.168.1.5:8384",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/syncthing.svg",
+      fallbackIcon: "folder-sync",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:8580",
+      subtitle: "Web Service",
+      url: "http://192.168.1.5:8580",
+      fallbackIcon: "globe",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:8200",
+      subtitle: "Web Service",
+      url: "http://192.168.1.5:8200",
+      fallbackIcon: "globe",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:5000",
+      subtitle: "Web Service",
+      url: "http://192.168.1.5:5000",
+      fallbackIcon: "globe",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:8088",
+      subtitle: "Web Service",
+      url: "http://192.168.1.5:8088",
+      fallbackIcon: "globe",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:8051",
+      subtitle: "Web Service",
+      url: "http://192.168.1.5:8051",
+      fallbackIcon: "globe",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:8080",
+      subtitle: "Web Service",
+      url: "http://192.168.1.5:8080",
+      fallbackIcon: "globe",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:8000",
+      subtitle: "Web Service",
+      url: "http://192.168.1.5:8000",
+      fallbackIcon: "globe",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:8430",
+      subtitle: "Web Service",
+      url: "http://192.168.1.5:8430",
+      fallbackIcon: "globe",
+      status: "online",
+    },
   ],
 
   // SECTION 2: Debug & Admin Services
   debugServices: [
-    { name: "Portainer", url: "https://192.168.1.5:9443", icon: "boxes", status: "online", serverId: "srv-1", category: "Admin" },
-    { name: "Cockpit", url: "https://192.168.1.5:9090", icon: "cpu", status: "online", serverId: "srv-1", category: "Admin" },
-    { name: "Uptime Kuma", url: "http://190.1.0.4:3001", icon: "activity", status: "online", serverId: "srv-5", category: "Monitor" },
-    { name: "Nginx Proxy Manager", url: "http://127.0.0.1:81", icon: "shield-check", status: "online", serverId: "srv-2", category: "Proxy" },
-    { name: "NPM (190.1.0.2)", url: "http://190.1.0.2:81", icon: "network", status: "online", serverId: "srv-3", category: "Proxy" },
-    { name: "http://190.1.0.3:20241", url: "http://190.1.0.3:20241", icon: "terminal", status: "online", serverId: "srv-4", category: "Admin" },
-    { name: "http://192.168.1.5:20211", url: "http://192.168.1.5:20211", icon: "terminal", status: "online", serverId: "srv-1", category: "Admin" },
-    { name: "http://192.168.1.5:5680", url: "http://192.168.1.5:5680", icon: "terminal", status: "online", serverId: "srv-1", category: "Admin" },
-    { name: "http://192.168.1.5:3909", url: "http://192.168.1.5:3909", icon: "database", status: "online", serverId: "srv-1", category: "Storage" },
-    { name: "http://192.168.1.5:3900", url: "http://192.168.1.5:3900", icon: "database", status: "online", serverId: "srv-1", category: "Storage" },
+    {
+      name: "Portainer",
+      subtitle: "Container Manager",
+      url: "https://192.168.1.5:9443",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/portainer.svg",
+      fallbackIcon: "boxes",
+      status: "online",
+    },
+    {
+      name: "Tailscale Console",
+      subtitle: "Mesh VPN & Devices",
+      url: "https://login.tailscale.com/admin/machines",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/tailscale.svg",
+      fallbackIcon: "network",
+      status: "online",
+    },
+    {
+      name: "Cockpit",
+      subtitle: "System Console",
+      url: "https://192.168.1.5:9090",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/cockpit.svg",
+      fallbackIcon: "cpu",
+      status: "online",
+    },
+    {
+      name: "Uptime Kuma",
+      subtitle: "Service Monitor",
+      url: "http://190.1.0.4:3001",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/uptime-kuma.svg",
+      fallbackIcon: "activity",
+      status: "online",
+    },
+    {
+      name: "Nginx Proxy Manager",
+      subtitle: "Gateway Proxy",
+      url: "http://127.0.0.1:81",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/nginx-proxy-manager.svg",
+      fallbackIcon: "shield-check",
+      status: "online",
+    },
+    {
+      name: "NPM (190.1.0.2)",
+      subtitle: "Secondary Proxy",
+      url: "http://190.1.0.2:81",
+      iconUrl: "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/nginx-proxy-manager.svg",
+      fallbackIcon: "network",
+      status: "online",
+    },
+    {
+      name: "http://190.1.0.3:20241",
+      subtitle: "Debug Endpoint",
+      url: "http://190.1.0.3:20241",
+      fallbackIcon: "terminal",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:20211",
+      subtitle: "Debug Endpoint",
+      url: "http://192.168.1.5:20211",
+      fallbackIcon: "terminal",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:5680",
+      subtitle: "Debug Endpoint",
+      url: "http://192.168.1.5:5680",
+      fallbackIcon: "terminal",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:3909",
+      subtitle: "Storage Console",
+      url: "http://192.168.1.5:3909",
+      fallbackIcon: "database",
+      status: "online",
+    },
+    {
+      name: "http://192.168.1.5:3900",
+      subtitle: "Storage Endpoint",
+      url: "http://192.168.1.5:3900",
+      fallbackIcon: "database",
+      status: "online",
+    },
   ],
 
-  guides: [
+  // FAQs for family members
+  faqs: [
     {
-      title: "How to watch movies on the TV or phone",
-      steps: [
-        "Make sure your phone, tablet, or TV is connected to our Home Wi-Fi.",
-        "Click Jellyfin on the home page (or open the Jellyfin app on the TV).",
-        "Pick your profile name and press Play.",
-      ],
+      question: "How do I back up my phone photos to Immich?",
+      answer:
+        "Open the Immich app on your phone (or visit photos.kontour.in). In settings, make sure Automatic Backup is turned ON. Whenever you are on Wi-Fi, your photos and videos will back up safely to ARCUBE.",
     },
     {
-      title: "How to back up your phone photos",
-      steps: [
-        "Open the Immich app on your phone (ask Arnav if you need it installed).",
-        "Make sure 'Automatic Backup' is turned on in the app settings.",
-        "Whenever you're on home Wi-Fi, new photos are saved safely to ARCUBE.",
-      ],
+      question: "How do I watch movies or shows on the TV or phone?",
+      answer:
+        "Connect to Home Wi-Fi, then click Jellyfin on the Services page (or open the Jellyfin app on the TV). Pick your profile and press Play.",
     },
     {
-      title: "What to do if a page doesn't load",
-      steps: [
-        "Check if you are on Home Wi-Fi (or if Tailscale VPN is turned on when traveling).",
-        "Wait 60 seconds and refresh the page—a server might be doing a quick update.",
-        "If it still doesn't open, message Arnav.",
-      ],
+      question: "What should I do if a website doesn't open?",
+      answer:
+        "First, check if you are on Home Wi-Fi—or if you are outside the house, make sure the Tailscale app switch is turned ON. Wait 1 minute and refresh. If it still doesn't load, send a message on the Contact Arnav page.",
     },
     {
-      title: "Accessing home apps while traveling",
-      steps: [
-        "Open the Tailscale app on your phone or laptop and flip the switch to ON.",
-        "Once connected, all links work just like at home.",
-        "You can turn it off again when you're done to save battery.",
-      ],
+      question: "How do I use ARCUBE apps when I'm traveling?",
+      answer:
+        "Open the Tailscale app on your phone or laptop and turn it ON. Once connected, links like Immich and Jellyfin work just like at home.",
+    },
+    {
+      question: "Do I ever need to open Section 2 (Debug & Admin)?",
+      answer:
+        "No! Section 2 is only for Arnav when maintaining or fixing things. Everything you need for daily use is in Section 1.",
     },
   ],
 };
