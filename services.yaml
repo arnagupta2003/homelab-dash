@@ -15,7 +15,7 @@ banner:
 
 contact:
   # Paste your Slack Incoming Webhook or n8n Webhook URL here:
-  slackWebhookUrl: ""
+  slackWebhookUrl: "https://n8n.bizad.in/webhook/arcube-ping"
   slackChannelLabel: "#arcube-help"
 
 # =============================================================================
