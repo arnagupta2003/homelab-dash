@@ -409,6 +409,8 @@
 
       <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
         <form id="slack-contact-form" class="space-y-4">
+          <!-- Honeypot field for bot/spam protection -->
+          <input id="contact-website" name="website" type="text" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label for="contact-name" class="block text-xs font-medium text-zinc-300">Your Name</label>
@@ -487,19 +489,20 @@
     `;
   }
 
-  // --- Slack Submission ---
+  // --- Slack / n8n Submission ---
   async function handleSlackSubmit(e) {
     e.preventDefault();
     const name = document.getElementById("contact-name")?.value.trim() || "Family Member";
     const service = document.getElementById("contact-service")?.value || "General Question";
     const message = document.getElementById("contact-message")?.value.trim() || "";
+    const website = document.getElementById("contact-website")?.value.trim() || "";
     if (!message) return;
 
     const webhookUrl = cfg.contact?.slackWebhookUrl?.trim();
     if (!webhookUrl) {
       state.slackResult = {
         ok: false,
-        message: "Slack webhook URL is missing in services.yaml. Use 'Copy Message' or add slackWebhookUrl.",
+        message: "Webhook URL is missing in services.yaml. Use 'Copy Message' or add slackWebhookUrl.",
       };
       render();
       return;
@@ -510,16 +513,19 @@
     render();
 
     const payload = {
-      text: `*ARCUBE Help Request*\n*From:* ${name}\n*Service:* ${service}\n*Message:* ${message}`,
+      origin: "arcube",
       name,
       service,
       message,
-      source: "ARCUBE Dashboard",
+      website,
+      text: `[arcube] *${service}* — from *${name}*\n>${message}`,
       timestamp: new Date().toISOString(),
     };
 
     try {
       const isSlackHooks = webhookUrl.includes("hooks.slack.com");
+      let responseMsg = `Sent to Slack! ${cfg.brand.ownerName}'s workflows have received your message.`;
+
       if (isSlackHooks) {
         await fetch(webhookUrl, {
           method: "POST",
@@ -533,18 +539,22 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.message || `Webhook returned ${res.status}`);
+        }
+        if (data.message) responseMsg = data.message;
       }
 
       state.slackResult = {
         ok: true,
-        message: `Sent to Slack! ${cfg.brand.ownerName}'s workflows have received your message.`,
+        message: responseMsg,
       };
       showToast("Message posted to Slack!");
     } catch (err) {
       state.slackResult = {
         ok: false,
-        message: `Could not reach Slack webhook (${err.message}). Try 'Copy Message' instead.`,
+        message: `Could not reach webhook (${err.message}). Try 'Copy Message' instead.`,
       };
     } finally {
       state.sendingSlack = false;
