@@ -578,7 +578,7 @@
     render();
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  function init() {
     document.getElementById("desktop-mode-toggle")?.addEventListener("click", toggleAdminMode);
     document.getElementById("mobile-mode-toggle")?.addEventListener("click", toggleAdminMode);
     document.getElementById("sidebar-contact-btn")?.addEventListener("click", goToContact);
@@ -588,5 +588,11 @@
     document.getElementById("mobile-drawer-backdrop")?.addEventListener("click", closeMobileDrawer);
 
     render();
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
