@@ -403,7 +403,7 @@
       <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
         <h1 class="text-2xl font-semibold tracking-tight text-zinc-50">Contact ${escapeHtml(cfg.brand.ownerName)}</h1>
         <p class="mt-1.5 text-sm text-zinc-400">
-          Send a message straight to Slack (${escapeHtml(cfg.contact?.slackChannelLabel || "#arcube-help")}) so automated workflows or ${escapeHtml(cfg.brand.ownerName)} can reply right away.
+          Send a note directly to ${escapeHtml(cfg.brand.ownerName)}'s task board so it gets tracked and fixed right away.
         </p>
       </section>
 
@@ -472,7 +472,7 @@
               class="inline-flex items-center gap-2 rounded-md bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200 disabled:opacity-50"
             >
               <i data-lucide="send" class="h-3.5 w-3.5"></i>
-              <span>${state.sendingSlack ? "Sending to Slack..." : "Send Message to Slack"}</span>
+              <span>${state.sendingSlack ? "Sending..." : `Send to ${escapeHtml(cfg.brand.ownerName)}`}</span>
             </button>
 
             <button

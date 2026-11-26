@@ -1,5 +1,5 @@
 {
-  "name": "Handle ARCUBE & Service Pings to Slack",
+  "name": "Handle ARCUBE & Service Pings to Kaneo",
   "nodes": [
     {
       "parameters": {
@@ -10,13 +10,13 @@
           "allowedOrigins": "*"
         }
       },
-      "id": "a1b2c3d4-1111-4000-8000-000000000001",
+      "id": "ac97ee32-8985-4fbf-a51e-06bc52613797",
       "name": "Receive Service Ping",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.2,
       "position": [
         0,
-        224
+        176
       ],
       "webhookId": "arcube-ping-webhook-001"
     },
@@ -64,13 +64,13 @@
         },
         "options": {}
       },
-      "id": "a1b2c3d4-2222-4000-8000-000000000002",
+      "id": "c5f4fef0-0124-4089-9868-296627d224f3",
       "name": "Validate Ping Payload",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
         224,
-        224
+        176
       ]
     },
     {
@@ -97,64 +97,55 @@
         },
         "options": {}
       },
-      "id": "a1b2c3d4-3333-4000-8000-000000000003",
+      "id": "77995d85-13a8-4ad1-a95b-654ddd7f1007",
       "name": "Is Payload Valid?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
         448,
-        224
+        176
       ]
     },
     {
       "parameters": {
-        "select": "channel",
-        "channelId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "C0CKYS8P2PQ",
-          "cachedResultName": "SELECT-YOUR-KANEO-CHANNEL"
-        },
-        "text": "={{ `[${$('Validate Ping Payload').item.json.origin}] ${$('Validate Ping Payload').item.json.service} - from ${$('Validate Ping Payload').item.json.name}\\n\\n${$('Validate Ping Payload').item.json.message}\\n\\n---\\nOrigin: ${$('Validate Ping Payload').item.json.origin} | Service: ${$('Validate Ping Payload').item.json.service} | Sender: ${$('Validate Ping Payload').item.json.name} | Time: ${$now.toFormat('yyyy-MM-dd HH:mm')}` }}",
-        "otherOptions": {
-          "includeLinkToWorkflow": false
-        }
+        "method": "POST",
+        "url": "https://YOUR_KANEO_DOMAIN/api/task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: '[' + $('Validate Ping Payload').item.json.origin + '] ' + $('Validate Ping Payload').item.json.service + ' - from ' + $('Validate Ping Payload').item.json.name, description: $('Validate Ping Payload').item.json.message + '\\n\\n---\\nOrigin: ' + $('Validate Ping Payload').item.json.origin + '\\nService: ' + $('Validate Ping Payload').item.json.service + '\\nSender: ' + $('Validate Ping Payload').item.json.name + '\\nTime: ' + $now.toFormat('yyyy-MM-dd HH:mm'), projectId: 'YOUR_KANEO_PROJECT_ID', status: 'to-do', priority: 'medium' }) }}",
+        "options": {}
       },
-      "id": "a1b2c3d4-4444-4000-8000-000000000004",
-      "name": "Notify Slack Kaneo Channel",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.7,
+      "id": "a9728549-d3a6-4cd5-b534-31c41346ff92",
+      "name": "Create Kaneo Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         704,
-        128
+        80
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000,
-      "credentials": {
-        "slackApi": {
-          "id": "7Y72pIhpzGp7zP4w",
-          "name": "ARCUBE Bot Token"
-        }
-      },
+      "waitBetweenTries": 3000,
       "onError": "continueErrorOutput",
-      "notes": "Switch channelId in n8n UI to the Slack channel that triggers your Kaneo board workflow. Message includes [origin] tag (e.g. [arcube])."
+      "notes": "1) Replace YOUR_KANEO_DOMAIN with your Kaneo URL.\n2) Replace YOUR_KANEO_PROJECT_ID with your Kaneo project ID.\n3) Attach your existing n8n HTTP Header Auth credential (Name: Authorization, Value: Bearer <KANEO_API_KEY>). Token stays inside n8n only."
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ ok: true, message: 'Message sent! Arnav has been pinged and it is on his board.' }) }}",
+        "responseBody": "={{ JSON.stringify({ ok: true, message: 'Message sent! It is now on Arnav\\'s board.', taskId: $('Create Kaneo Task').item.json.id ?? null }) }}",
         "options": {
           "responseCode": 200
         }
       },
-      "id": "a1b2c3d4-5555-4000-8000-000000000005",
+      "id": "f783d2ea-aa70-43a6-af00-baea37240d91",
       "name": "Respond Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
         960,
-        48
+        0
       ]
     },
     {
@@ -165,13 +156,13 @@
           "responseCode": 400
         }
       },
-      "id": "a1b2c3d4-6666-4000-8000-000000000006",
+      "id": "d06d94cf-a9b0-4fc5-9933-7f68a0542b1a",
       "name": "Respond Validation Error",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
         704,
-        320
+        272
       ]
     },
     {
@@ -182,13 +173,13 @@
           "responseCode": 500
         }
       },
-      "id": "a1b2c3d4-7777-4000-8000-000000000007",
+      "id": "41dfd02a-ed0d-4049-83b1-a80da0be6e63",
       "name": "Respond Server Error",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
         960,
-        240
+        192
       ]
     }
   ],
@@ -220,7 +211,7 @@
       "main": [
         [
           {
-            "node": "Notify Slack Kaneo Channel",
+            "node": "Create Kaneo Task",
             "type": "main",
             "index": 0
           }
@@ -234,7 +225,7 @@
         ]
       ]
     },
-    "Notify Slack Kaneo Channel": {
+    "Create Kaneo Task": {
       "main": [
         [
           {
@@ -253,9 +244,12 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
   },
+  "id": "NFyWTKqccBsBf9tk",
   "tags": []
 }
