@@ -32,29 +32,36 @@ user:
     url: https://jellyfin.kontour.in
     icon: jellyfin
 
+  - name: Cameras
+    subtitle: Home Security Cameras
+    url: https://camera.kontour.in
+    icon: frigate
+
   - name: Paperless
     subtitle: Documents, Bills & PDFs
     url: https://docs.kontour.in
     icon: paperless-ngx
+    status: offline
 
+  # Placeholder *arr stack (*.bizad.in) — update URLs when ready
   - name: Jellyseerr
     subtitle: Request Movies & Shows
-    url: https://requests.kontour.in
+    url: https://requests.bizad.in
     icon: jellyseerr
 
   - name: Radarr
     subtitle: Movies Library
-    url: https://radarr.kontour.in
+    url: https://radarr.bizad.in
     icon: radarr
 
   - name: Sonarr
     subtitle: TV Shows Library
-    url: https://sonarr.kontour.in
+    url: https://sonarr.bizad.in
     icon: sonarr
 
   - name: Bazarr
     subtitle: Subtitles
-    url: https://bazarr.kontour.in
+    url: https://bazarr.bizad.in
     icon: bazarr
 
 # =============================================================================
@@ -67,8 +74,13 @@ admin:
     icon: portainer
 
   - name: Nginx Proxy Manager
-    subtitle: Reverse Proxy & SSL
-    url: https://npm.kontour.in
+    subtitle: Public Reverse Proxy
+    url: https://nginx.kontour.in
+    icon: nginx-proxy-manager
+
+  - name: NPM (Internal)
+    subtitle: Internal Reverse Proxy
+    url: https://nginx.int.kontour.in
     icon: nginx-proxy-manager
 
   - name: Tailscale Console
@@ -81,40 +93,80 @@ admin:
     url: https://uptime.kontour.in
     icon: uptime-kuma
 
+  - name: Cockpit
+    subtitle: Server System Console
+    url: https://manage.kontour.in
+    icon: cockpit
+
   - name: Syncthing
     subtitle: Device Folder Sync
     url: https://sync.kontour.in
     icon: syncthing
-
-  - name: Cockpit
-    subtitle: Server System Console
-    url: https://cockpit.kontour.in
-    icon: cockpit
-
-  - name: Prowlarr
-    subtitle: Indexers & Search
-    url: https://prowlarr.kontour.in
-    icon: prowlarr
-
-  - name: n8n
-    subtitle: Workflows & Automations
-    url: https://n8n.kontour.in
-    icon: n8n
 
   - name: Duplicati
     subtitle: Scheduled Backups
     url: https://bkp.kontour.in
     icon: duplicati
 
-  - name: S3 Storage API
-    subtitle: Object Storage
-    url: https://s3.int.kontour.in
-    icon: minio
-  
-  - name: S3 Storage Web
-    subtitle: Object Storage
+  - name: qBittorrent
+    subtitle: Download Client
+    url: https://qbit.kontour.in
+    icon: qbittorrent
+
+  - name: NetAlertX
+    subtitle: Network & Device Monitor
+    url: https://netalert.kontour.in
+    icon: netalertx
+
+  - name: Metrics
+    subtitle: Server Telemetry
+    url: https://metrics.int.kontour.in
+    icon: grafana
+
+  - name: File Browser
+    subtitle: Internal File Manager
+    url: https://files.int.kontour.in
+    icon: filebrowser
+
+  - name: S3 Web Console
+    subtitle: Object Storage UI
     url: https://s3-web.int.kontour.in
     icon: minio
+
+  - name: S3 API
+    subtitle: Object Storage Endpoint
+    url: https://s3.int.kontour.in
+    icon: minio
+
+  - name: Supabase
+    subtitle: Database & Auth
+    url: https://supabase.int.kontour.in
+    icon: supabase
+
+  - name: PocketBase
+    subtitle: Backend & Database
+    url: https://pocketbase.int.kontour.in
+    icon: pocketbase
+
+  - name: AGY Runner
+    subtitle: Agentic Workflows
+    url: https://agy.int.kontour.in
+    icon: docker
+
+  - name: WAHA
+    subtitle: WhatsApp HTTP API
+    url: https://waha.int.kontour.in
+    icon: whatsapp
+
+  - name: Investments
+    subtitle: Portfolio Tracker
+    url: https://invst.int.kontour.in
+    icon: ghostfolio
+
+  - name: Ghost (Internal)
+    subtitle: Blog Admin
+    url: https://blog.int.kontour.in
+    icon: ghost
 
 # =============================================================================
 # FAQs (Shown on the FAQs page)
@@ -124,7 +176,10 @@ faqs:
     answer: Open the Immich app on your phone (or visit photos.kontour.in). In settings, make sure Automatic Backup is turned ON. Whenever you are on Wi-Fi, your photos and videos will back up safely to ARCUBE.
 
   - question: How do I watch or request movies and TV shows?
-    answer: Click Jellyfin (watch.kontour.in) to watch what's already available. Want a new movie or show? Request it via Jellyseerr (requests.kontour.in), or check Radarr/Sonarr.
+    answer: Click Jellyfin (jellyfin.kontour.in) to watch what's already available. Want a new movie or show? Request it via Jellyseerr, or check Radarr/Sonarr.
+
+  - question: How do I check the home security cameras?
+    answer: Click Cameras (camera.kontour.in) on the Services page to view live feeds and recorded events.
 
   - question: Where do I find family bills, IDs, and PDFs?
     answer: Click Paperless (docs.kontour.in) to search and view scanned family documents, bills, and receipts.
