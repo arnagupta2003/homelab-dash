@@ -2,22 +2,29 @@
   const cfg = window.ARCUBE_CONFIG;
   if (!cfg) return;
 
-  const servicesList = Array.isArray(cfg.services) ? cfg.services : [];
-  const debugList = Array.isArray(cfg.debugServices) ? cfg.debugServices : [];
+  const userServices = Array.isArray(cfg.userServices) ? cfg.userServices : [];
+  const adminServices = Array.isArray(cfg.adminServices) ? cfg.adminServices : [];
   const faqsList = Array.isArray(cfg.faqs) ? cfg.faqs : [];
 
   const state = {
-    activeTab: "services", // "services" | "faqs" | "contact"
+    activeTab: "services", // "services" | "admin" | "faqs" | "contact"
+    adminMode: false, // false = User Mode (default), true = Admin Mode
     searchQuery: "",
     sendingSlack: false,
-    slackResult: null, // { ok: boolean, message: string }
+    slackResult: null,
   };
 
-  const NAV_ITEMS = [
-    { id: "services", label: "Services", icon: "layout-grid" },
-    { id: "faqs", label: "FAQs", icon: "help-circle" },
-    { id: "contact", label: "Contact Arnav", icon: "message-square" },
-  ];
+  function getNavItems() {
+    const items = [{ id: "services", label: "Services", icon: "layout-grid" }];
+    if (state.adminMode) {
+      items.push({ id: "admin", label: "Admin & Debug", icon: "terminal" });
+    }
+    items.push(
+      { id: "faqs", label: "FAQs", icon: "help-circle" },
+      { id: "contact", label: "Contact Arnav", icon: "message-square" }
+    );
+    return items;
+  }
 
   // --- Helpers ---
   function escapeHtml(str) {
@@ -61,7 +68,7 @@
     });
     ["sidebar-brand-subtitle", "drawer-brand-subtitle"].forEach((id) => {
       const el = document.getElementById(id);
-      if (el) el.textContent = subtitle;
+      if (el) el.textContent = state.adminMode ? "Admin Console" : subtitle;
     });
 
     const bannerText = document.getElementById("banner-text");
@@ -71,22 +78,25 @@
   }
 
   function renderNav() {
-    const html = NAV_ITEMS.map((item) => {
-      const active = state.activeTab === item.id;
-      return `
-        <button
-          data-tab="${item.id}"
-          class="nav-tab-btn flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
-            active
-              ? "bg-zinc-800/90 text-zinc-50"
-              : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-          }"
-        >
-          <i data-lucide="${item.icon}" class="h-4 w-4 shrink-0"></i>
-          <span>${escapeHtml(item.label)}</span>
-        </button>
-      `;
-    }).join("");
+    const navItems = getNavItems();
+    const html = navItems
+      .map((item) => {
+        const active = state.activeTab === item.id;
+        return `
+          <button
+            data-tab="${item.id}"
+            class="nav-tab-btn flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
+              active
+                ? "bg-zinc-800/90 text-zinc-50"
+                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+            }"
+          >
+            <i data-lucide="${item.icon}" class="h-4 w-4 shrink-0"></i>
+            <span>${escapeHtml(item.label)}</span>
+          </button>
+        `;
+      })
+      .join("");
 
     const desktopNav = document.getElementById("desktop-nav");
     const mobileNav = document.getElementById("mobile-nav");
@@ -100,18 +110,35 @@
         render();
       });
     });
+
+    // Mode toggle UI
+    const badge = document.getElementById("mode-badge");
+    const toggleLabel = document.getElementById("mode-toggle-label");
+    const mobileToggle = document.getElementById("mobile-mode-toggle");
+    if (badge) {
+      badge.textContent = state.adminMode ? "Admin" : "User";
+      badge.className = state.adminMode
+        ? "rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400"
+        : "rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400";
+    }
+    if (toggleLabel) {
+      toggleLabel.textContent = state.adminMode ? "Switch to User" : "Switch to Admin";
+    }
+    if (mobileToggle) {
+      mobileToggle.textContent = state.adminMode ? "Admin" : "User";
+    }
   }
 
-  // --- Service Card (App Image Icon + URL) ---
+  // --- Service Card (App Image Icon + Website URL) ---
   function renderIcon(svc) {
     const fallback = escapeHtml(svc.fallbackIcon || "globe");
     if (svc.iconUrl) {
       return `
-        <div class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 p-1.5 group-hover:border-zinc-700">
+        <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 p-2 group-hover:border-zinc-700">
           <img
             src="${escapeHtml(svc.iconUrl)}"
             alt="${escapeHtml(svc.name)} icon"
-            class="h-5 w-5 object-contain"
+            class="h-6 w-6 object-contain"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
           />
           <span style="display:none" class="items-center justify-center text-zinc-300">
@@ -121,15 +148,15 @@
       `;
     }
     return `
-      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 group-hover:border-zinc-700">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-300 group-hover:border-zinc-700">
         <i data-lucide="${fallback}" class="h-4 w-4"></i>
       </div>
     `;
   }
 
-  function renderRedirectCard(svc, isDebug = false) {
+  function renderRedirectCard(svc, isAdmin = false) {
     const dotClass = svc.status === "online" ? "bg-emerald-400" : "bg-rose-400";
-    const borderAccent = isDebug
+    const borderAccent = isAdmin
       ? "border-zinc-800/80 bg-zinc-950/70 hover:border-amber-500/40 hover:bg-zinc-900/70"
       : "border-zinc-800/80 bg-zinc-950/60 hover:border-zinc-600 hover:bg-zinc-900/70";
 
@@ -149,7 +176,12 @@
               <h3 class="truncate text-sm font-semibold text-zinc-100 group-hover:text-white">${escapeHtml(svc.name)}</h3>
               <span class="h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}"></span>
             </div>
-            <p class="truncate font-mono-code text-[11px] text-zinc-400">${escapeHtml(displayUrl)}</p>
+            ${
+              svc.subtitle
+                ? `<p class="truncate text-xs text-zinc-400">${escapeHtml(svc.subtitle)}</p>`
+                : ""
+            }
+            <p class="mt-0.5 truncate font-mono-code text-[11px] text-zinc-500">${escapeHtml(displayUrl)}</p>
           </div>
         </div>
         <i data-lucide="arrow-up-right" class="h-4 w-4 shrink-0 text-zinc-500 transition-colors group-hover:text-zinc-200"></i>
@@ -163,8 +195,8 @@
     const filterItem = (s) =>
       !q || `${s.name} ${s.subtitle || ""} ${s.url}`.toLowerCase().includes(q);
 
-    const filteredServices = servicesList.filter(filterItem);
-    const filteredDebug = debugList.filter(filterItem);
+    const filteredUser = userServices.filter(filterItem);
+    const filteredAdmin = adminServices.filter(filterItem);
 
     return `
       <!-- Welcome / Search Header -->
@@ -172,7 +204,13 @@
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 class="text-2xl font-semibold tracking-tight text-zinc-50 sm:text-3xl">${escapeHtml(cfg.brand.title)}</h1>
-            <p class="mt-1.5 text-sm text-zinc-400">Click any service below to open it. Need help? Check FAQs or message ${escapeHtml(cfg.brand.ownerName)}.</p>
+            <p class="mt-1.5 text-sm text-zinc-400">
+              ${
+                state.adminMode
+                  ? "Admin mode active — showing both User Services and Admin / Debug URLs."
+                  : `Click any app below to open it. Need help? Check FAQs or message ${escapeHtml(cfg.brand.ownerName)}.`
+              }
+            </p>
           </div>
           <div class="relative w-full sm:w-64">
             <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
@@ -187,42 +225,85 @@
         </div>
       </section>
 
-      <!-- SECTION 1: Click-to-Redirect Services -->
+      <!-- USER SECTION: Everyday Home Services -->
       <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
-        <div class="mb-4">
-          <div class="flex items-center gap-2">
-            <span class="rounded bg-emerald-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Section 1</span>
-            <h2 class="text-base font-semibold text-zinc-100">Services</h2>
+        <div class="mb-4 flex items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="rounded bg-emerald-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-emerald-400">User</span>
+              <h2 class="text-base font-semibold text-zinc-100">Home Services</h2>
+            </div>
+            <p class="mt-1 text-xs text-zinc-400">Photos, movies, documents, cloud drive, and smart home.</p>
           </div>
-          <p class="mt-1 text-xs text-zinc-400">Everyday apps like Immich, Jellyfin, Ghost, and Syncthing. Click any card to open.</p>
         </div>
 
         ${
-          filteredServices.length === 0
+          filteredUser.length === 0
             ? `<p class="text-xs text-zinc-500">No matching services.</p>`
             : `<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                ${filteredServices.map((svc) => renderRedirectCard(svc, false)).join("")}
+                ${filteredUser.map((svc) => renderRedirectCard(svc, false)).join("")}
               </div>`
         }
       </section>
 
-      <!-- SECTION 2: Debug & Admin Services -->
-      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/30 p-5">
-        <div class="mb-4">
-          <div class="flex items-center gap-2">
-            <span class="rounded bg-amber-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-amber-400">Section 2</span>
-            <h2 class="text-base font-semibold text-zinc-100">Debug &amp; Admin</h2>
-          </div>
-          <p class="mt-1 text-xs text-zinc-400">Portainer, Tailscale console, Cockpit, and proxy/monitoring tools.</p>
-        </div>
+      ${
+        state.adminMode
+          ? `<!-- ADMIN SECTION (Only visible in Admin Mode) -->
+             <section class="rounded-xl border border-amber-500/20 bg-zinc-900/30 p-5">
+               <div class="mb-4 flex items-center justify-between gap-2">
+                 <div>
+                   <div class="flex items-center gap-2">
+                     <span class="rounded bg-amber-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-amber-400">Admin</span>
+                     <h2 class="text-base font-semibold text-zinc-100">Admin &amp; Debug</h2>
+                   </div>
+                   <p class="mt-1 text-xs text-zinc-400">Portainer, Nginx Proxy Manager, Tailscale, Cockpit, and monitoring consoles.</p>
+                 </div>
+               </div>
 
-        ${
-          filteredDebug.length === 0
-            ? `<p class="text-xs text-zinc-500">No matching debug services.</p>`
-            : `<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                ${filteredDebug.map((svc) => renderRedirectCard(svc, true)).join("")}
-              </div>`
-        }
+               ${
+                 filteredAdmin.length === 0
+                   ? `<p class="text-xs text-zinc-500">No matching admin services.</p>`
+                   : `<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                       ${filteredAdmin.map((svc) => renderRedirectCard(svc, true)).join("")}
+                     </div>`
+               }
+             </section>`
+          : ""
+      }
+    `;
+  }
+
+  function renderAdminOnly() {
+    const q = state.searchQuery.trim().toLowerCase();
+    const filteredAdmin = adminServices.filter(
+      (s) => !q || `${s.name} ${s.subtitle || ""} ${s.url}`.toLowerCase().includes(q)
+    );
+
+    return `
+      <section class="rounded-xl border border-amber-500/20 bg-zinc-900/40 p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-2xl font-semibold tracking-tight text-zinc-50">Admin &amp; Debug</h1>
+              <span class="rounded bg-amber-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-amber-400">Admin Mode</span>
+            </div>
+            <p class="mt-1.5 text-sm text-zinc-400">Direct URLs to Portainer, Nginx Proxy Manager, Tailscale, Cockpit, DNS, and backups.</p>
+          </div>
+          <div class="relative w-full sm:w-64">
+            <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
+            <input
+              id="services-search-input"
+              type="text"
+              value="${escapeHtml(state.searchQuery)}"
+              placeholder="Search admin tools..."
+              class="w-full rounded-md border border-zinc-800 bg-zinc-950 py-2 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        ${filteredAdmin.map((svc) => renderRedirectCard(svc, true)).join("")}
       </section>
     `;
   }
@@ -231,7 +312,7 @@
     return `
       <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
         <h1 class="text-2xl font-semibold tracking-tight text-zinc-50">FAQs</h1>
-        <p class="mt-1.5 text-sm text-zinc-400">Quick answers for common questions. Still stuck? Use Contact Arnav.</p>
+        <p class="mt-1.5 text-sm text-zinc-400">Quick answers for common questions. Still stuck? Use Contact ${escapeHtml(cfg.brand.ownerName)}.</p>
       </section>
 
       <section class="space-y-3">
@@ -252,7 +333,7 @@
           .join("")}
       </section>
 
-      <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5 flex flex-wrap items-center justify-between gap-3">
+      <section class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-5">
         <p class="text-xs text-zinc-300">Didn't find what you were looking for?</p>
         <button id="faq-goto-contact" class="inline-flex items-center gap-2 rounded-md bg-zinc-100 px-3.5 py-2 text-xs font-semibold text-zinc-950 transition-colors hover:bg-zinc-200">
           <i data-lucide="message-square" class="h-3.5 w-3.5"></i>
@@ -264,7 +345,7 @@
 
   function renderContact() {
     const hasWebhook = Boolean(cfg.contact && cfg.contact.slackWebhookUrl);
-    const allServiceNames = [...servicesList, ...debugList].map((s) => s.name);
+    const serviceNames = userServices.map((s) => s.name);
 
     return `
       <section class="rounded-xl border border-zinc-800/90 bg-zinc-900/40 p-6">
@@ -294,7 +375,7 @@
                 class="mt-1.5 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 focus:border-zinc-600 focus:outline-none"
               >
                 <option value="General Question">General Question</option>
-                ${allServiceNames.map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("")}
+                ${serviceNames.map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("")}
               </select>
             </div>
           </div>
@@ -388,8 +469,6 @@
     try {
       const isSlackHooks = webhookUrl.includes("hooks.slack.com");
       if (isSlackHooks) {
-        // Slack incoming webhooks block CORS preflight for application/json;
-        // sending form-urlencoded or no-cors delivers the payload reliably from static sites.
         await fetch(webhookUrl, {
           method: "POST",
           mode: "no-cors",
@@ -397,7 +476,6 @@
           body: `payload=${encodeURIComponent(JSON.stringify({ text: payload.text }))}`,
         });
       } else {
-        // n8n or custom webhook endpoint
         const res = await fetch(webhookUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -461,7 +539,9 @@
     if (!container) return;
 
     if (state.activeTab === "services") container.innerHTML = renderServices();
-    else if (state.activeTab === "faqs") container.innerHTML = renderFaqs();
+    else if (state.activeTab === "admin") {
+      container.innerHTML = state.adminMode ? renderAdminOnly() : renderServices();
+    } else if (state.activeTab === "faqs") container.innerHTML = renderFaqs();
     else if (state.activeTab === "contact") container.innerHTML = renderContact();
 
     bindViewEvents();
@@ -474,7 +554,16 @@
     renderViewOnly();
   }
 
-  // --- Mobile Drawer ---
+  // --- Mode Toggle & Mobile Drawer ---
+  function toggleAdminMode() {
+    state.adminMode = !state.adminMode;
+    if (!state.adminMode && state.activeTab === "admin") {
+      state.activeTab = "services";
+    }
+    render();
+    showToast(state.adminMode ? "Admin mode enabled" : "Switched to User mode");
+  }
+
   function openMobileDrawer() {
     document.getElementById("mobile-drawer")?.classList.remove("hidden");
   }
@@ -490,8 +579,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("desktop-mode-toggle")?.addEventListener("click", toggleAdminMode);
+    document.getElementById("mobile-mode-toggle")?.addEventListener("click", toggleAdminMode);
     document.getElementById("sidebar-contact-btn")?.addEventListener("click", goToContact);
-    document.getElementById("mobile-contact-btn")?.addEventListener("click", goToContact);
     document.getElementById("drawer-contact-btn")?.addEventListener("click", goToContact);
     document.getElementById("mobile-menu-btn")?.addEventListener("click", openMobileDrawer);
     document.getElementById("mobile-drawer-close")?.addEventListener("click", closeMobileDrawer);

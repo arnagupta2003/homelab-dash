@@ -1,15 +1,14 @@
 # ARCUBE
 
-A clean, dark-mode dashboard for **ARCUBE** styled after [arnavgupta2003.github.io](https://arnavgupta2003.github.io/), designed for non-tech family members.
+A clean, dark-mode dashboard for **ARCUBE** with separate **User** and **Admin** modes.
 
-## Pages
-- **Services**:
-  - **Section 1**: Everyday click-to-redirect apps (Immich at `photos.kontour.in`, Jellyfin, Ghost, Syncthing, etc.) with app icons.
-  - **Section 2**: Debug & Admin consoles (Portainer, Tailscale, Cockpit, Uptime Kuma, Nginx Proxy Manager, etc.).
-- **FAQs**: Plain-English answers for family members.
-- **Contact Arnav**: Form that posts directly to Slack (or an n8n webhook) so automated workflows can reply.
+## Modes & Pages
+- **User Mode (Default)**:
+  - **Services**: Everyday home apps (`Immich`, `Jellyfin`, `Paperless`, `Nextcloud`, `Home Assistant`, `Vaultwarden`, `Open WebUI`, `Ghost`, `Syncthing`, `Cal.com`) using `*.kontour.in` website URLs and app icons.
+  - **FAQs**: Plain-English Q&As for family members.
+  - **Contact Arnav**: Form that posts straight to Slack (or an n8n webhook).
+- **Admin Mode**:
+  - Toggle **Switch to Admin** in the sidebar (or mobile header) to reveal **Admin & Debug** (`Portainer`, `Nginx Proxy Manager`, `Tailscale Console`, `Cockpit`, `Uptime Kuma`, `AdGuard Home`, `n8n`, `Duplicati`, `S3 Storage`) — website URLs only, no raw IPs.
 
 ## Configuration
-Edit `config.js`:
-1. Update `services` and `debugServices` URLs/icons.
-2. Paste your Slack Incoming Webhook or n8n Webhook URL into `contact.slackWebhookUrl`.
+Edit `config.js` to adjust any `*.kontour.in` subdomain or paste your Slack / n8n webhook URL into `contact.slackWebhookUrl`.
