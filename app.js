@@ -233,7 +233,7 @@
               <span class="rounded bg-emerald-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-emerald-400">User</span>
               <h2 class="text-base font-semibold text-zinc-100">Home Services</h2>
             </div>
-            <p class="mt-1 text-xs text-zinc-400">Photos, movies, documents, cloud drive, and smart home.</p>
+            <p class="mt-1 text-xs text-zinc-400">Photos, movies, TV shows, requests, and documents.</p>
           </div>
         </div>
 
@@ -287,7 +287,7 @@
               <h1 class="text-2xl font-semibold tracking-tight text-zinc-50">Admin &amp; Debug</h1>
               <span class="rounded bg-amber-500/10 px-2 py-0.5 font-mono-code text-[10px] font-semibold uppercase tracking-wider text-amber-400">Admin Mode</span>
             </div>
-            <p class="mt-1.5 text-sm text-zinc-400">Direct URLs to Portainer, Nginx Proxy Manager, Tailscale, Cockpit, DNS, and backups.</p>
+            <p class="mt-1.5 text-sm text-zinc-400">Direct URLs to Portainer, Nginx Proxy Manager, Tailscale, Uptime Kuma, Syncthing, Cockpit, and backups.</p>
           </div>
           <div class="relative w-full sm:w-64">
             <i data-lucide="search" class="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-500"></i>
