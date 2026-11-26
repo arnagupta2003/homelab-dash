@@ -118,16 +118,6 @@ admin:
     url: https://netalert.kontour.in
     icon: netalertx
 
-  - name: Metrics
-    subtitle: Server Telemetry
-    url: https://metrics.int.kontour.in
-    icon: grafana
-
-  - name: File Browser
-    subtitle: Internal File Manager
-    url: https://files.int.kontour.in
-    icon: filebrowser
-
   - name: S3 Web Console
     subtitle: Object Storage UI
     url: https://s3-web.int.kontour.in
@@ -138,16 +128,6 @@ admin:
     url: https://s3.int.kontour.in
     icon: minio
 
-  - name: Supabase
-    subtitle: Database & Auth
-    url: https://supabase.int.kontour.in
-    icon: supabase
-
-  - name: PocketBase
-    subtitle: Backend & Database
-    url: https://pocketbase.int.kontour.in
-    icon: pocketbase
-
   - name: AGY Runner
     subtitle: Agentic Workflows
     url: https://agy.int.kontour.in
@@ -157,16 +137,6 @@ admin:
     subtitle: WhatsApp HTTP API
     url: https://waha.int.kontour.in
     icon: whatsapp
-
-  - name: Investments
-    subtitle: Portfolio Tracker
-    url: https://invst.int.kontour.in
-    icon: ghostfolio
-
-  - name: Ghost (Internal)
-    subtitle: Blog Admin
-    url: https://blog.int.kontour.in
-    icon: ghost
 
 # =============================================================================
 # FAQs (Shown on the FAQs page)
