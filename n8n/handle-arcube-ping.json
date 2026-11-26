@@ -115,8 +115,10 @@
           "value": "C0CKYS8P2PQ",
           "cachedResultName": "SELECT-YOUR-KANEO-CHANNEL"
         },
-        "text": "={{ ':satellite: *New Ping* `' + $('Validate Ping Payload').item.json.origin + '`\\n*Service:* ' + $('Validate Ping Payload').item.json.service + '\\n*From:* ' + $('Validate Ping Payload').item.json.name + '\\n*Message:*\\n> ' + $('Validate Ping Payload').item.json.message.replace(/\\n/g, '\\n> ') }}",
-        "otherOptions": {}
+        "text": "={{ `:satellite: *New Ping* \\`${$('Validate Ping Payload').item.json.origin}\\`\\n\\n*Service:* ${$('Validate Ping Payload').item.json.service}\\n*From:* ${$('Validate Ping Payload').item.json.name}\\n*Message:*\\n> ${$('Validate Ping Payload').item.json.message.replace(/\\n/g, '\\n> ')}` }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
       },
       "id": "a1b2c3d4-4444-4000-8000-000000000004",
       "name": "Notify Slack Kaneo Channel",
