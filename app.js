@@ -518,7 +518,7 @@
       service,
       message,
       website,
-      text: `:satellite: *New Ping* \`arcube\`\n*Service:* ${service}\n*From:* ${name}\n*Message:*\n> ${message.replace(/\n/g, "\n> ")}`,
+      text: `[arcube] ${service} - from ${name}\n\n${message}\n\n---\nOrigin: arcube | Service: ${service} | Sender: ${name}`,
       timestamp: new Date().toISOString(),
     };
 

@@ -115,7 +115,7 @@
           "value": "C0CKYS8P2PQ",
           "cachedResultName": "SELECT-YOUR-KANEO-CHANNEL"
         },
-        "text": "={{ `:satellite: *New Ping* \\`${$('Validate Ping Payload').item.json.origin}\\`\\n\\n*Service:* ${$('Validate Ping Payload').item.json.service}\\n*From:* ${$('Validate Ping Payload').item.json.name}\\n*Message:*\\n> ${$('Validate Ping Payload').item.json.message.replace(/\\n/g, '\\n> ')}` }}",
+        "text": "={{ `[${$('Validate Ping Payload').item.json.origin}] ${$('Validate Ping Payload').item.json.service} - from ${$('Validate Ping Payload').item.json.name}\\n\\n${$('Validate Ping Payload').item.json.message}\\n\\n---\\nOrigin: ${$('Validate Ping Payload').item.json.origin} | Service: ${$('Validate Ping Payload').item.json.service} | Sender: ${$('Validate Ping Payload').item.json.name} | Time: ${$now.toFormat('yyyy-MM-dd HH:mm')}` }}",
         "otherOptions": {
           "includeLinkToWorkflow": false
         }
